@@ -1,4 +1,4 @@
-Tool for Gekko trading bot which help in strategy choosing or developing. Save Your time with Gekko Auto Backtest.
+Tool for Gekko trading bot. The tool performs a test with multiple pairs and/or multiple strategies on a single run. This is useful when creating a strategy or when you want to compare a few to choose the best one. Thanks to the tool, you will notice your time in comparison to traditional testing.
 
 Features
 - Test multiple strategies on mulitple pairs on one run
