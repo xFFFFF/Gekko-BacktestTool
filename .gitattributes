@@ -1,2 +1,3 @@
-*.csv linguist-vendored=true
-*.MD linguist-vendored=true
+database.csv linguist-vendored
+README.MD linguist-vendored
+*.pl linguist-vendored=false
