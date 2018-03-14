@@ -2,7 +2,7 @@ Tool for Gekko trading bot. The tool performs a test with multiple pairs and/or 
 
 You can do the same with many strategies and CandleSize values. You can test all your strategies on eg BTC-USD pair and compare results, which will allow you to choose the best strategy you will use in live trade.
 
-#Features
+# Features
 - Test multiple candleSize, strategies on mulitple pairs on one run
 - Start multiple PaperTraders
 - Multiple datasets import
@@ -10,7 +10,7 @@ You can do the same with many strategies and CandleSize values. You can test all
 - Multithreading - do more in this same time
 - Extended statistics
 
-#Installation and run
+# Installation and run
 1. Clone git https://github.com/xFFFFF/GekkoBacktestTool.git
 2. Copy files to Gekko's main directory
 3. Install dependies"
@@ -22,11 +22,11 @@ For import:
 For start multiple paperTraders:
 `$ perl backtest.pl -p`
 
-#Known Bugs
+# Known Bugs
 - Dont working if pair has two or more datasets
 - If empty datasets > threads amount then app freeze up. Temporary fix: ctrl + c
 
-#Change Log
+# Change Log
 v0.1
 - multiple datasets import (perl backtest.pl -i)
 - start multiple paperTraders in background (perl backtest.pl -p) (need improvement)
@@ -35,7 +35,7 @@ v0.1
 - performance improvement
 - bugfixes
 
-#ToDo
+# ToDo
 - Winning/lossing trades
 - Import datasets from Bittrex
 - Overwriting Gekko values with command line arguments, for example hit from terminal `backtest.pl BTC-USD` will test BTC-USD paid
