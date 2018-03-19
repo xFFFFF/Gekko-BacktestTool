@@ -2,19 +2,26 @@ Tool for Gekko trading bot. The tool performs a test with multiple pairs and/or 
 
 You can do the same with many strategies and CandleSize values. You can test all your strategies on eg BTC-USD pair and compare results, which will allow you to choose the best strategy you will use in live trade.
 
+# DEMO
+Backtest machine
+![Alt text](images/backtest.gif?raw=true "GekkoBacktestTool running demo")
+
+Database file
+![Alt text](images/csv.gif?raw=true "GekkoBacktestTool CSV file demo")
+
 # Features
-- Test multiple candleSize, strategies on mulitple pairs on one run
+- Test multiple candleSize, strategies and mulitple pairs on one run
 - Start multiple PaperTraders
 - Multiple datasets import
-- Results are exporting to CSV file
-- Multithreading - do more in this same time
+- Backtests results are exporting to CSV file
+- Multithreading - in contrast to raw Gekko backtest this tool uses 100% of your processor
 - Extended statistics
 
 # Installation and run
 1. Clone git https://github.com/xFFFFF/GekkoBacktestTool.git
 2. Copy files to Gekko's main directory
-3. Install dependies"
-`$ sudo cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed`
+3. Install dependies:
+`$ sudo cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir`
 4. For backtest:
 `$ perl backtest.pl`
 For import:
@@ -26,20 +33,25 @@ For start multiple paperTraders:
 - Dont working if pair has two or more datasets
 - If empty datasets > threads amount then app freeze up. Temporary fix: ctrl + c
 
+# ToDo
+- Import datasets from Bittrex
+- highest/lowest roundtrip profit, avarage or median of roundtrips
+- Userfriendly configuration file
+- Comparing results of backtest on terminal output
+- GUI
+
 # Change Log
+v0.2
+- winning/losses trades in csv file
+- command line parameters support (--import, --paper, --strat, --pair, --candles, --output --from, --to, --help)
+- showing roundtrips in terminal output (can be disabled in configuration)
+- bugfixes/code clean
 v0.1
 - multiple datasets import (perl backtest.pl -i)
 - start multiple paperTraders in background (perl backtest.pl -p) (need improvement)
 - support for multiple CandleSize and CandleHistory
-- logs is moved to logs direcotry
+- logs is moved to logs directory
 - performance improvement
 - bugfixes
 
-# ToDo
-- Winning/lossing trades
-- Import datasets from Bittrex
-- Overwriting Gekko values with command line arguments, for example hit from terminal `backtest.pl BTC-USD` will test BTC-USD paid
-- Userfriendly configuration file
-- Comparing results of backtest on terminal output
-- Allow showing roundtrips on output
-- GUI
+
