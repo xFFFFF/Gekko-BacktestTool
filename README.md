@@ -46,6 +46,7 @@ v0.2
 - command line parameters support (--import, --paper, --strat, --pair, --candles, --output --from, --to, --help)
 - showing roundtrips in terminal output (can be disabled in configuration)
 - bugfixes/code clean
+
 v0.1
 - multiple datasets import (perl backtest.pl -i)
 - start multiple paperTraders in background (perl backtest.pl -p) (need improvement)
