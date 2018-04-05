@@ -55,4 +55,6 @@ v0.1
 - performance improvement
 - bugfixes
 
-
+# See Also
+- My database of Gekko's strategies: https://github.com/xFFFFF/Gekko-Strategies
+- Complete datasets in SQLite files, ready to download and use: https://github.com/xFFFFF/Gekko-Datasets
