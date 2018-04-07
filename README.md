@@ -21,26 +21,45 @@ Database file
 1. Clone git https://github.com/xFFFFF/GekkoBacktestTool.git
 2. Copy files to Gekko's main directory
 3. Install dependies:
-`$ sudo cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir`
-4. For backtest:
+`$ sudo cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON TOML File::Basename File::Find::Wanted
+4. Edit backtest-config.pl in text editor.
+5. For backtest:
 `$ perl backtest.pl`
 For import:
 `$ perl backtest.pl -i`
 For start multiple paperTraders:
 `$ perl backtest.pl -p`
+For more information:
+`$perl backtest.pl -h`
 
 # Known Bugs
 - Dont working if pair has two or more datasets
 - If empty datasets > threads amount then app freeze up. Temporary fix: ctrl + c
 
 # ToDo
-- Import datasets from Bittrex
-- highest/lowest roundtrip profit, avarage or median of roundtrips
-- Userfriendly configuration file
+- volume info for datasets - min, max, avarage and current from coinmarketcap
 - Comparing results of backtest on terminal output
+- define columns added to csv
+- price standard deviatiom for datasets
+- parameter ALL for exchanges
+- print data like strats names, avaible datasets etc
+- temp config w osobnym katalogu
+- binance:ALL not working at bitfinex datasets - fix
+- Import datasets from Bittrex
+- Import sqlite file dumps (full history)
 - GUI
 
 # Change Log
+v0.3 
+- Gekko BacktestTool external config file support. Default config is backtest-config.pl, but You can create own and use backtest.pl 
+- using TOML files for strategies configuration as default. Can be changed in backtest-config.pl
+- percentage wins, best win, worst loss, median win, median lost, average exposed duration added to csv file.
+- parameter --covert TOML_FILE. Convert toml file and print strategy settings in Gekko's config file format
+- parameter exchange:ALL and exchange:asset:ALL for backtest pairs. Do backtest for all available pairs. Based on non empty tables from sqlite database.
+- parameter exchange:ALL and exchange:asset:ALL for import pairs. Import all available pairs from exchange. Based on exchange/exchange-markets.json file
+- parameter --import --from=last --to=now. The 'last' value checks in the database the time of the last candle for each pair and assign this value to --from. 'now' assign current time in GMT time zone. In short: with this command you can import from the last candle from datasets to current time.
+- parameter --config BACKTESTTOOL_CONFIG_FILENAME.
+
 v0.2
 - winning/losses trades in csv file
 - command line parameters support (--import, --paper, --strat, --pair, --candles, --output --from, --to, --help)
@@ -55,6 +74,4 @@ v0.1
 - performance improvement
 - bugfixes
 
-# See Also
-- My database of Gekko's strategies: https://github.com/xFFFFF/Gekko-Strategies
-- Complete datasets in SQLite files, ready to download and use: https://github.com/xFFFFF/Gekko-Datasets
+
