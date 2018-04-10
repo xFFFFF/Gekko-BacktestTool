@@ -50,19 +50,15 @@ Optional parameters:
 
 # Some examples
 Backtests of all available pairs for Binance Exchange in Gekko's scan datarange mode:
-
 `$ perl backtest.pl -p binance:ALL`
 
 Backtest on all pairs and strategies defined in backtest-config.pl with candles 5, 10, 20, 40 and 12 hours warmup period:
-
 `$ perl backtest.pl -n 5:144,10:73,20:36,40:15`
 
 Import all new candles for all BNB pairs:
-
 `$ perl backtest.pl -i -p binance:BNB:ALL -f last -t now`
 
 Import all candles for pairs defined in backtest-config.pl from 2017-01-02 to now:
-
 `$ perl backtest.pl -i -f 2017-01-02 -t now`
 
 # Known Bugs
