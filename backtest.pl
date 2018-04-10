@@ -388,6 +388,12 @@ if ($oconvert) {
 else {
   my $pm = Parallel::ForkManager->new($threads);
   my %paircalc;
+
+  $pm->run_on_finish(sub {
+    my $data = pop @_;
+    %paircalc = (%paircalc, %$data);
+  });
+  
   my ($endtread, $volume, $volume_day, $overall_trades, $overall_trades_day);
   
   if ($ostrat) {
@@ -601,6 +607,7 @@ else {
 
             my $avg = avg (@ceny);
             $rstddev = sprintf("%.1f", stddev(@ceny) * 100 / $avg);
+            $paircalc{"rsd$pairname"} = $rstddev; 
             #$paircalc{"rsd$pairname"} = $rstddev; 
             my ($var, $var2);
             sub sum {
@@ -617,11 +624,11 @@ else {
               return ($var, $var2);
             }
             &sum ('volume');
-            $volume = $var;
-            $volume_day = $var2;
+            $paircalc{"vol$pairname"} = $var;
+            $paircalc{"vold$pairname"} = $var2;
             &sum ('trades');
-            $overall_trades = $var;
-            $overall_trades_day = $var2;
+            $paircalc{"tra$pairname"} = $var;
+            $paircalc{"trad$pairname"} = $var2;
           }
           
           if ($print_roundtrips eq 'yes') {
@@ -640,6 +647,12 @@ else {
             close $fh3;
           }
 
+          $rstddev = $paircalc{"rsd$pairname"};
+          $volume = $paircalc{"vol$pairname"};
+          $volume_day = $paircalc{"vold$pairname"};
+          $overall_trades = $paircalc{"tra$pairname"};
+          $overall_trades_day = $paircalc{"trad$pairname"};
+          
           open my $fh3, '>>', $csv or die "Cannot open $csv!";
           my $tocsv = "$sets[1]\,$sets[2]\,$sets[0]\,$_\,$profit\,$dailyprofit\,$yearly\,$sharpe_ratio[0]\,$market\,$diff\,$trades[0]\,$dailytrades\,$wins\,$losses\,$perwin\,$rtmax\,$medwins\,$rtmin\,$medloss\,$avg_exposed\,$warms[0]\,$warms[1]\,$days\,\"$ctime\"\,\"$start[0]\"\,\"$end[0]\"\,$rstddev\,$volume\,$volume_day\,$overall_trades\,$overall_trades_day\,\"$note\"\r\n";
           print $fh3 join ("\n",$tocsv);
@@ -656,15 +669,15 @@ else {
         }
 
         if (@strategies >= @pairs && @strategies >= @warmup && @strategies > 1) {
-          $pm->finish;
+          $pm->finish(0, \%paircalc);
         }
       }
       if (@pairs >= @strategies && @pairs >= @warmup && @pairs > 1) {
-        $pm->finish;
+        $pm->finish(0, \%paircalc);
       }
     }
     if (@warmup >= @strategies && @warmup >= @pairs && @warmup > 1) {
-      $pm->finish;
+      $pm->finish(0, \%paircalc);
     }
   $pm->wait_all_children;
   }
