@@ -11,13 +11,12 @@ Database file
 ![Alt text](images/csv.gif?raw=true "GekkoBacktestTool CSV file demo")
 
 # Features
-- Test multiple candleSize, strategies and mulitple pairs on one run
-- Start multiple PaperTraders
-- Multiple datasets import
-- Backtests results are exporting to CSV file [(see sample)](https://github.com/xFFFFF/Gekko-BacktestTool/blob/master/sample_output.csv)
-- Multithreading - in contrast to raw Gekko backtest this tool uses 100% of your processor
-- Support both TOML and JSON strategy config files in CLI mode
-- Extended statistics such as: price volality, average, lowest, highest price, percentage roundtrip wins/loss roundtrips, median wins/loss roundtrip, average exposed duration, volume, overall pair trades from exchange, etc.
+- **Backtest** for multiple strategies and pairs with one command
+- **Backtests results** are exporting to CSV file [(see sample)](https://github.com/xFFFFF/Gekko-BacktestTool/blob/master/sample_output.csv)
+- **Import** multiple datasets with one command
+- **Ergonomy** - support both TOML and JSON strategy config files in CLI mode
+- **Performance** - support multithreading - in contrast to raw Gekko backtest this tool uses 100% of your processor
+- **Extended statistics** - 32 variables from single backtest result, such as: volume, price volality, average price, percentage wins/loss trades, median profit for wins/loss trades, average exposed duration, overall pair trades from exchange, etc.
 
 # Installation and run
 1. Clone git https://github.com/xFFFFF/GekkoBacktestTool.git
@@ -42,11 +41,11 @@ Optional parameters:
   -p, --pair PAIR	 - Define pairs to backtest in exchange:currency:asset format ex: backtest.pl --p bitfinex:USD:AVT. You can add multiple pairs seperated by commas.
   -p exchange:ALL	 - Perform action on all available pairs. Other usage: exchange:USD:ALL to perform action for all USD pairs.
   -n, --candle CANDLE	 - Define candleSize and warmup period for backtest in candleSize:warmup format, ex: backtest.pl -n 5:144,10:73. You can add multiple values seperated by commas.
-  -f, --from
-  -f last		- Start import from last candle available in DB. If pair not exist in DB then start from 24h ago.
+  -f, --from             - From time range for backtest datasets or import. Example: backtest.pl --from="2018-01-01 09:10" --to="2018-01-05 12:23"
+  -f last		 - Start import from last candle available in DB. If pair not exist in DB then start from 24h ago.
   -t, --to		 - Time range for backtest datasets or import. Example: backtest.pl --from="2018-01-01 09:10" --to="2018-01-05 12:23"
-  -t now		- 'now' is current time in GMT.
-  -o, --output FILENAME - CSV file name.
+  -t now 	  	 - 'now' is current time in GMT.
+  -o, --output FILENAME  - CSV file name.
 ```
 
 # Some examples
@@ -66,24 +65,18 @@ Import all candles for pairs defined in backtest-config.pl from 2017-01-02 to no
 
 `$ perl backtest.pl -i -f 2017-01-02 -t now`
 
-# Known Bugs
-- Dont working if pair has two or more datasets
-- If empty datasets > threads amount then app freeze up. Temporary fix: ctrl + c
-
 # ToDo
 - comparing results of backtest on terminal output
-- define columns added to csv
-- parameter ALL for exchanges
-- parameter --info  for data like strats names, avaible datasets etc
+- template - choose columns added to csv
+- parameter `ALL` for exchanges and strategies
+- parameter `--info`  for print data like strats names, avaible datasets etc
+- [coinmarketcap](https://coinmarketcap.com) data in CSV output
+- printing Gekko's output without buffering
+- more descriptive and readable cmd output (text bold?)
 - temp configs in seperated directory
-- Import datasets from Bittrex
+- Windows system compatibility
 - Import sqlite file dumps (full history)
-- GUI
-
-
-# Change Log
-v0.5
-- price: *open*, *close*, *high*, *low*, *average* for dataset period in CSV output
+- GUI   
 
 # Change Log
 v0.4
@@ -119,10 +112,13 @@ v0.1
 - performance improvement
 - bugfixes
 
-# Donate
-If you liked my job, you can buy me coffee.
+# See also
+- [Gekko's Datasets](https://github.com/xFFFFF/Gekko-Datasets)   
+- [Gekko's Strategies](https://github.com/xFFFFF/Gekko-Strategies)    
 
-BTC: `32G2cYTNFJ8heKUbALWSgGvYQikyJ9dHZp`
-BCH: `qrnp70u37r96ddun2guwrg6gnq45yrxuwu3gyewsgq`
-ETH: `0x50b7611b6dC8a4073cB4eF12A6b045f644c3a3Aa`
-LTC: `M9xT3mcxskjbvowoFa15hbKXShLNTuwr6n`
+# Donate
+If you liked my job, you can buy me coffee.   
+BTC: `32G2cYTNFJ8heKUbALWSgGvYQikyJ9dHZp`   
+BCH: `qrnp70u37r96ddun2guwrg6gnq45yrxuwu3gyewsgq`   
+ETH: `0x50b7611b6dC8a4073cB4eF12A6b045f644c3a3Aa`   
+LTC: `M9xT3mcxskjbvowoFa15hbKXShLNTuwr6n`   
