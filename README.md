@@ -1,5 +1,5 @@
 # Gekko BacktestTool
-Tool for Gekko trading bot. The tool performs a test with multiple pairs and/or multiple strategies on a single run. Suppose you have a strategy that you want to test on more currency pairs. You enter all the pairs on which you want to test the strategy for the application configuration. You start the application and everything happens automatically. You are just waiting for the results that appear on the screen. You will see how your strategy falls on other pairs, where it works the best, and where the worst. More detailed data is available in the .CSV file, which you can open in a spreadsheet or text editor.
+CLI tool for Gekko trading bot. The tool performs a test with multiple pairs and/or multiple strategies on a single run. Suppose you have a strategy that you want to test on more currency pairs. You enter all the pairs on which you want to test the strategy for the application configuration. You start the application and everything happens automatically. You are just waiting for the results that appear on the screen. You will see how your strategy falls on other pairs, where it works the best, and where the worst. More detailed data is available in the .CSV file, which you can open in a spreadsheet or text editor.
 
 You can do the same with many strategies and CandleSize values. You can test all your strategies on eg BTC-USD pair and compare results, which will allow you to choose the best strategy you will use in live trade.
 
@@ -16,7 +16,8 @@ Database file
 - Multiple datasets import
 - Backtests results are exporting to CSV file [(see sample)](https://github.com/xFFFFF/Gekko-BacktestTool/blob/master/sample_output.csv)
 - Multithreading - in contrast to raw Gekko backtest this tool uses 100% of your processor
-- Extended statistics
+- Support both TOML and JSON strategy config files in CLI mode
+- Extended statistics such as: price volality, average, lowest, highest price, percentage roundtrip wins/loss roundtrips, median wins/loss roundtrip, average exposed duration, volume, overall pair trades from exchange, etc.
 
 # Installation and run
 1. Clone git https://github.com/xFFFFF/GekkoBacktestTool.git
@@ -79,6 +80,11 @@ Import all candles for pairs defined in backtest-config.pl from 2017-01-02 to no
 - Import sqlite file dumps (full history)
 - GUI
 
+
+# Change Log
+v0.5
+- price: *open*, *close*, *high*, *low*, *average* for dataset period in CSV output
+
 # Change Log
 v0.4
 - price *volality* (based on relative standard deviation) in CSV output
@@ -112,3 +118,11 @@ v0.1
 - logs is moved to logs directory
 - performance improvement
 - bugfixes
+
+# Donate
+If you liked my job, you can buy me coffee.
+
+BTC: `32G2cYTNFJ8heKUbALWSgGvYQikyJ9dHZp`
+BCH: `qrnp70u37r96ddun2guwrg6gnq45yrxuwu3gyewsgq`
+ETH: `0x50b7611b6dC8a4073cB4eF12A6b045f644c3a3Aa`
+LTC: `M9xT3mcxskjbvowoFa15hbKXShLNTuwr6n`
