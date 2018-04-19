@@ -16,12 +16,11 @@ Database file
 - **Import** multiple datasets with one command
 - **Ergonomy** - support both TOML and JSON strategy config files in CLI mode
 - **Performance** - support multithreading - in contrast to raw Gekko backtest this tool can uses 100% of your processor
-- **Extended statistics** - 32 variables from single backtest result, such as: volume, price volality, average price, percentage wins/loss trades, median profit for wins/loss trades, average exposed duration, overall pair trades from exchange, etc.
+- **Extended statistics** - 40 variables from single backtest result, such as: volume, price volality, average price, percentage wins/loss trades, median profit for wins/loss trades, average exposed duration, overall pair trades from exchange, etc.
 
 # Requirements
 - [Gekko Trading Bot](https://github.com/askmike/gekko)
-- Perl   
-Perl is installed by default on most unix-like systems. For MS Windows install [Strawberry Perl](http://strawberryperl.com/)
+- Perl - installed by default on most unix-like systems. For MS Windows install [Strawberry Perl](http://strawberryperl.com/)
 
 # Installation
 **Debian, Ubuntu, Linux Mint**
