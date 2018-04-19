@@ -39,9 +39,23 @@ $csv = 'database.csv';
 # You can add note to project below. Note will be add in CSV file. Its can be useful when You are developing strategy.
 $note = 'first run';
 
+# Template of CSV output columns. Format [% variable_name %], columns MUST be seperated by comma (,) without any space. 
+# Below is compact version
+$csv_columns = \ "[% currency %],[% asset %],[% strategy %],[% profit %],[% profit_day %],[% sharpe_ratio %],[% market_change %],[% trades %],[% trades_day %],[% percentage_wins %],[% best_win %],[% median_wins %],[% worst_loss %],[% median_losses %],[% avg_exposed_duration %],[% candle_size %],[% warmup_period %],[% dataset_days %],[% CMC_Rank %],[% current_marketcap %],[% open_price %],[% close_price %],[% lowest_price %],[% highest_price %],[% avg_price %],[% price_volality %],[% volume_day %],[% volume_CMC %],[% overall_trades_day %],[% note %]";
+
+# Minimalistic version
+#$csv_columns = \ "[% currency %],[% asset %],[% strategy %],[% profit %],[% profit_day %],[% profit_market %],[% trades_day %],[% percentage_wins %],[% best_win %],[% worst_loss %],[% avg_exposed_duration %],[% dataset_days %],[% CMC_Rank %],[% current_marketcap %],[% avg_price %],[% price_volality %],[% volume_day %],[% volume_CMC %],[% overall_trades_day %]";
+
+# Full version - all possible BacktestTool variables.
+#$csv_columns = \ "[% currency %],[% asset %],[% exchange %],[% strategy %],[% profit %],[% profit_day %],[% profit_year %],[% sharpe_ratio %],[% market_change %],[% profit_market %],[% trades %],[% trades_day %],[% winning_trades %],[% lost_trades %],[% percentage_wins %],[% best_win %],[% median_wins %],[% worst_loss %],[% median_losses %],[% avg_exposed_duration %],[% candle_size %],[% warmup_period %],[% dataset_days %],[% backtest_start %],[% dataset_from %],[% dataset_to %],[% CMC_Rank %],[% current_marketcap %],[% open_price %],[% close_price %],[% lowest_price %],[% highest_price %],[% avg_price %],[% price_volality %],[% volume %],[% volume_day %],[% volume_CMC %],[% overall_trades %],[% overall_trades_day %],[% note %]";
+
+# Do You want coinmarketcap.com data in CSV output? Warning: It's decrase performance a bit.
+$cmc_data = 'yes';
+
 # Do you want see roundtrips report in terminal output?
 $print_roundtrips = 'no';
 
+# Use TOML strat's config files instead JSON?
 $use_toml_files = 'yes';
 $toml_directory = 'config/strategies/';
 
@@ -51,7 +65,10 @@ $keep_logs = 'no';
 # Threads amount, for 4xcpu cores is recommended to set 5-6 value.
 $threads = 5;
 
-# Between brackets place strategy settings in Gekko's config.js format.
+# Do You want see more info?
+$debug = 'no';
+
+# If You set $use_toml_files to 'no' then add Your strat's config in JSON format between brackets below.
 $stratsettings = q(
 config.neuralnet = {
   "threshold_buy": 1,

@@ -1,5 +1,5 @@
 # Gekko BacktestTool
-CLI tool for Gekko trading bot. The tool performs a test with multiple pairs and/or multiple strategies on a single run. Suppose you have a strategy that you want to test on more currency pairs. You enter all the pairs on which you want to test the strategy for the application configuration. You start the application and everything happens automatically. You are just waiting for the results that appear on the screen. You will see how your strategy falls on other pairs, where it works the best, and where the worst. More detailed data is available in the .CSV file, which you can open in a spreadsheet or text editor.
+CLI tool that enhances the features of [Gekko's Trading Bot](https://github.com/askmike/gekko). The tool performs a test with multiple pairs on a single run. Suppose you have a strategy that you want to test on more currency pairs. You enter all the pairs on which you want to test the strategy for the BacktestTool's configuration file. You start the application and everything happens automatically. You are just waiting for the results that appear on the screen. You will see how your strategy falls on other pairs, where it works the best, and where the worst. More detailed data is available in the .CSV file, which you can open in a spreadsheet or text editor.
 
 You can do the same with many strategies and CandleSize values. You can test all your strategies on eg BTC-USD pair and compare results, which will allow you to choose the best strategy you will use in live trade.
 
@@ -15,16 +15,45 @@ Database file
 - **Backtests results** are exporting to CSV file [(see sample)](https://github.com/xFFFFF/Gekko-BacktestTool/blob/master/sample_output.csv)
 - **Import** multiple datasets with one command
 - **Ergonomy** - support both TOML and JSON strategy config files in CLI mode
-- **Performance** - support multithreading - in contrast to raw Gekko backtest this tool uses 100% of your processor
+- **Performance** - support multithreading - in contrast to raw Gekko backtest this tool can uses 100% of your processor
 - **Extended statistics** - 32 variables from single backtest result, such as: volume, price volality, average price, percentage wins/loss trades, median profit for wins/loss trades, average exposed duration, overall pair trades from exchange, etc.
 
-# Installation and run
-1. Clone git https://github.com/xFFFFF/GekkoBacktestTool.git
+# Requirements
+- [Gekko Trading Bot](https://github.com/askmike/gekko)
+- Perl   
+Perl is installed by default on most unix-like systems. For MS Windows install [Strawberry Perl](http://strawberryperl.com/)
+
+# Installation
+**Debian, Ubuntu, Linux Mint**
+1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
 2. Copy files to Gekko's main directory
-3. Install dependies:
-`$ sudo cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON TOML File::Basename File::Find::Wanted`
-4. Edit backtest-config.pl in text editor.
-5. Available commands:
+3. Install dependies:   
+`$ sudo cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https`   
+
+**Other Unix-like OS**   
+1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
+2. Copy files to Gekko's main directory
+3. Install dependies:   
+`$ su`   
+`$ cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https`   
+   
+**MS Windows**   
+1. Install [Strawberry Perl](http://strawberryperl.com/)
+2. Download Gekko BacktestTool from [here](https://github.com/xFFFFF/Gekko-BacktestTool/archive/master.zip)
+3. Uncompress files from master.zip to Your main Gekko's folder
+4. Find *Run...* in Menu Start
+5. Enter cmd.exe and press enter
+6. In appeared Window with black background enter command:
+`cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https`   
+
+# Run 
+1. Edit backtest-config.pl in text editor.  
+2. In terminal/cmd go to Your main Gekko's folder ex:   
+Windows - `cd C:\Users\xFFFFF\Desktop\gekko`   
+Linux - `cd /home/xFFFFF/gekko`
+3. Run BacktestTool by command `perl backtest.pl`
+
+**All available commands**
 ```
 usage: perl backtest.pl
 To run backtests machine
@@ -48,37 +77,37 @@ Optional parameters:
   -o, --output FILENAME  - CSV file name.
 ```
 
-# Some examples
-Backtests of all available pairs for Binance Exchange in Gekko's scan datarange mode:
-
+**Some examples**    
+Backtests of all available pairs for Binance Exchange in Gekko's scan datarange mode:   
 `$ perl backtest.pl -p binance:ALL`
 
-Backtest on all pairs and strategies defined in backtest-config.pl with candles 5, 10, 20, 40 and 12 hours warmup period:
-
+Backtest on all pairs and strategies defined in backtest-config.pl with candles 5, 10, 20, 40 and 12 hours warmup period:   
 `$ perl backtest.pl -n 5:144,10:73,20:36,40:15`
 
-Import all new candles for all BNB pairs:
-
+Import all new candles for all BNB pairs:   
 `$ perl backtest.pl -i -p binance:BNB:ALL -f last -t now`
 
-Import all candles for pairs defined in backtest-config.pl from 2017-01-02 to now:
-
+Import all candles for pairs defined in backtest-config.pl from 2017-01-02 to now:   
 `$ perl backtest.pl -i -f 2017-01-02 -t now`
 
 # ToDo
 - comparing results of backtest on terminal output
-- template - choose columns added to csv
 - parameter `ALL` for exchanges and strategies
-- parameter `--info`  for print data like strats names, avaible datasets etc
-- [coinmarketcap](https://coinmarketcap.com) data in CSV output
+- parameter `--info`  for print data like strats names, available datasets etc
 - printing Gekko's output without buffering
 - more descriptive and readable cmd output (text bold?)
-- temp configs in seperated directory
-- Windows system compatibility
 - Import sqlite file dumps (full history)
 - GUI   
 
 # Change Log
+v0.5
+- price: *open*, *close*, *high*, *low*, *average* for dataset period in CSV output
+- [coinmarketcap.com](https://coinmarketcap.com) data in CSV output: *current marketcap*, *current rank*, *last 24h global volume*
+- CSV's template - now You can choose which columns will be add to CSV file
+- temporary GBT's files are in tmp directory now.
+- MS Windows compatibility fix (tested on W7x64 and StrawberryPerl)
+- backtest-config.pl file updated
+
 v0.4
 - price *volality* (based on relative standard deviation) in CSV output
 - sum of *volume* and *volume/day* for dataset period in CSV output
@@ -117,7 +146,7 @@ v0.1
 - [Gekko's Strategies](https://github.com/xFFFFF/Gekko-Strategies)    
 
 # Donate
-If you liked my job, you can buy me coffee.   
+If you liked my work, you can buy me coffee.   
 BTC: `32G2cYTNFJ8heKUbALWSgGvYQikyJ9dHZp`   
 BCH: `qrnp70u37r96ddun2guwrg6gnq45yrxuwu3gyewsgq`   
 ETH: `0x50b7611b6dC8a4073cB4eF12A6b045f644c3a3Aa`   
