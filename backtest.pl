@@ -96,6 +96,11 @@ sub toepoch {
   if (! defined $a[5]) {
     $a[5] = 00
   }
+  --$a[1];
+  if ($a[1] < 0) {
+    --$a[0];
+    $a[1] += 12;
+  }
   my $b = timelocal($a[5], $a[4], $a[3], $a[2], $a[1], $a[0]);
   return $b;
 }
