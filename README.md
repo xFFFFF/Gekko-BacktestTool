@@ -23,13 +23,21 @@ Database file
 - Perl - installed by default on most unix-like systems. For MS Windows install [Strawberry Perl](http://strawberryperl.com/)
 
 # Installation
-**Debian, Ubuntu, Linux Mint**
+**"Binaries": Easiest install way for Linuxes**
+1. Download latest version from repository's [releases](https://github.com/xFFFFF/Gekko-BacktestTool/releases):  
+`$ wget https://github.com/xFFFFF/Gekko-BacktestTool/releases/download/v0.5/Gekko-BacktestTool-v0.5-Ubuntu-x64.zip`
+2. Extract zip:   
+`$ unzip Gekko-BacktestTool-v0.5-Ubuntu-x64.zip`
+3. Copy all extrated files to main Gekko's directory:    
+`$ cp backtest backtest-config.pl /home/f/gekko`
+
+**Open Source: Debian, Ubuntu, Linux Mint**
 1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
 2. Copy files to Gekko's main directory
 3. Install dependies:   
 `$ sudo cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https`   
 
-**Other Unix-like OS**   
+**Open Source: Other Unix-like OS**   
 1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
 2. Copy files to Gekko's main directory
 3. Install dependies:   
