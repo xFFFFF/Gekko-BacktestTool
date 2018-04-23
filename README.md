@@ -58,7 +58,7 @@ Database file
 2. In terminal/cmd go to Your main Gekko's folder ex:   
 Windows - `cd C:\Users\xFFFFF\Desktop\gekko`   
 Linux - `cd /home/xFFFFF/gekko`
-3. If You are using Open Source version go to next step. For "binaries" add execution privilege: `chmod +x backtest"
+3. If You are using Open Source version go to next step. For "binaries" add execution privilege: `chmod +x backtest`
 4. Run BacktestTool by command:   
 a) Open Source version: `perl backtest.pl`   
 b) Binaries: `./backtest` 
