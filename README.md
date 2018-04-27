@@ -13,14 +13,16 @@ Database file
 # Features
 - **Backtest** for multiple strategies and pairs with one command
 - **Backtests results** are exporting to CSV file [(see sample)](https://github.com/xFFFFF/Gekko-BacktestTool/blob/master/sample_output.csv)
+- **Analysis** and comparing all strategy and pair results in variables such as: *% of profitable backtests for strategy*, *% of results with profit above market*, *% of win trades*, *average P&L for trades* and more!   
 - **Import** multiple datasets with one command
-- **Ergonomy** - support both TOML and JSON strategy config files in CLI mode
-- **Performance** - support multithreading - in contrast to raw Gekko backtest this tool can uses 100% of your processor
-- **Extended statistics** - 40 variables from single backtest result, such as: volume, price volality, average price, percentage wins/loss trades, median profit for wins/loss trades, average exposed duration, overall pair trades from exchange, etc.
+- **Strategy config file** - support both TOML and JSON files in CLI mode
+- **Strategy optimization** - searching for optimal parameters (brute force method) for the strategy on many datasets
+- **Multithreading** - in contrast to raw Gekko backtest this tool can uses 100% of your processor
+- **Extended statistics** - 40 variables from single backtest result, such as: *volume*, *price (min, max, avg, volality)*, *percent of win trades*, *median P&L for trades*, *marketcap*, *CoinMarketCap Rank*, etc.
 
-# Requirements
+# Minimal requirements
 - [Gekko Trading Bot](https://github.com/askmike/gekko)
-- Perl - installed by default on most unix-like systems. For MS Windows install [Strawberry Perl](http://strawberryperl.com/)
+- [Binaries of BacktestTool](https://github.com/xFFFFF/Gekko-BacktestTool/releases)
 
 # Installation
 **"Binaries": Easiest install way for Linuxes**
@@ -35,14 +37,14 @@ Database file
 1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
 2. Copy files to Gekko's main directory
 3. Install dependies:   
-`$ sudo cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https`   
+`$ sudo cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https Set::CrossProduct DBD::CSV Text::Table File::Copy`   
 
 **Open Source: Other Unix-like OS**   
 1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
 2. Copy files to Gekko's main directory
 3. Install dependies:   
 `$ su`   
-`$ cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https`   
+`$ cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https Set::CrossProduct DBD::CSV Text::Table File::Copy`   
    
 **MS Windows**   
 1. Install [Strawberry Perl](http://strawberryperl.com/)
@@ -51,7 +53,7 @@ Database file
 4. Find *Run...* in Menu Start
 5. Enter cmd.exe and press enter
 6. In appeared Window with black background enter command:
-`cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https`   
+`cpan install Parallel::ForkManager Time::ParseDate Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https Set::CrossProduct DBD::CSV Text::Table File::Copy`   
 
 # Run 
 1. Edit backtest-config.pl in text editor.  
@@ -68,41 +70,48 @@ b) Binaries: `./backtest`
 usage: perl backtest.pl
 To run backtests machine
 
-usage: perl backtest.pl [parameter] [optional parameter]
-Parameters:
+usage: perl backtest.pl [mode] [optional parameter]
+To run other features
+
+Mode:
   -i, --import	 - Import new datasets
   -g, --paper	 - Start multiple sessions of PaperTrader
-  -v, --convert	 - Convert TOML file to Gekko's CLI config format, ex: backtest.pl -v MACD.toml
+  -v, --convert TOMLFILE - Convert TOML file to Gekko's CLI config format, ex: backtest.pl -v MACD.toml
+  -a, --analyze CSVFILE	 - Perform comparision of strategies and pairs from csv file, ex: backtest.pl -a database.csv
   
 Optional parameters:
   -c, --config		 - BacktestTool config file. Default is backtest-config.pl
-  -s, --strat STRATEGY_NAME - Define strategies for backtests. You can add multiple strategies seperated by commas example: backtest.pl --strat=MACD,CCI
+  -s, --strat STRAT_NAME - Define strategies for backtests. You can add multiple strategies seperated by commas example: backtest.pl --strat=MACD,CCI
   -p, --pair PAIR	 - Define pairs to backtest in exchange:currency:asset format ex: backtest.pl --p bitfinex:USD:AVT. You can add multiple pairs seperated by commas.
   -p exchange:ALL	 - Perform action on all available pairs. Other usage: exchange:USD:ALL to perform action for all USD pairs.
   -n, --candle CANDLE	 - Define candleSize and warmup period for backtest in candleSize:warmup format, ex: backtest.pl -n 5:144,10:73. You can add multiple values seperated by commas.
-  -f, --from             - From time range for backtest datasets or import. Example: backtest.pl --from="2018-01-01 09:10" --to="2018-01-05 12:23"
-  -f last		 - Start import from last candle available in DB. If pair not exist in DB then start from 24h ago.
-  -t, --to		 - Time range for backtest datasets or import. Example: backtest.pl --from="2018-01-01 09:10" --to="2018-01-05 12:23"
-  -t now 	  	 - 'now' is current time in GMT.
-  -o, --output FILENAME  - CSV file name.
+  -f, --from		- Time range for backtest datasets or import. Example: backtest.pl --from="2018-01-01 09:10" --to="2018-01-05 12:23"
+  -t, --to
+  -f last		- Start import from last candle available in DB. If pair not exist in DB then start from 24h ago.
+  -t now		- 'now' is current time in GMT.
+  -o, --output FILENAME - CSV file name.
 ```
 
-**Some examples**    
-Backtests of all available pairs for Binance Exchange in Gekko's scan datarange mode:   
+# Some examples
+- **B**acktests of all available pairs for Binance Exchange in Gekko's scan datarange mode:   
 `$ perl backtest.pl -p binance:ALL`
 
-Backtest on all pairs and strategies defined in backtest-config.pl with candles 5, 10, 20, 40 and 12 hours warmup period:   
+- **B**acktest on all pairs and strategies defined in backtest-config.pl with candles 5, 10, 20, 40 and 12 hours warmup period:   
 `$ perl backtest.pl -n 5:144,10:73,20:36,40:15`
 
-Import all new candles for all BNB pairs:   
+- **I**mport all new candles for all BNB pairs:   
 `$ perl backtest.pl -i -p binance:BNB:ALL -f last -t now`
 
-Import all candles for pairs defined in backtest-config.pl from 2017-01-02 to now:   
+- **I**mport all candles for pairs defined in backtest-config.pl from 2017-01-02 to now:   
 `$ perl backtest.pl -i -f 2017-01-02 -t now`
 
+- **S**earch best parameters for strategy: edit TOML file in config/strategies    
+![Strat config example](http://i.imgur.com/OkGPQSm.png)    
+The above example will generate 15 backtests with unique configurations. Syntax for brute force is: start..end: step (as in the case of TimePeriod) or value1, value2, value3 (example from interval). The generated values for TimePeriod are 15, 20, 25. After saving the file, run the backtest of the given strategy, eg backtest.pl -s BBRSI.
+
 # ToDo
-- comparing results of backtest on terminal output
-- parameter `ALL` for exchanges and strategies
+- add filters to analyser (avg trade day, profit, hodl, avg trades win) and limit for printed results
+- 3rd sort value in analyser
 - parameter `--info`  for print data like strats names, available datasets etc
 - printing Gekko's output without buffering
 - more descriptive and readable cmd output (text bold?)
@@ -110,6 +119,15 @@ Import all candles for pairs defined in backtest-config.pl from 2017-01-02 to no
 - GUI   
 
 # Change Log
+v0.6
+- after completion of the backtests, the analysis module displays three tables with data: *ALL RESULTS*, *TOP STRATEGIES*, *TOP DATASET*
+- parameter `--analyze mycsvfile.csv` for analyze any results from BacktestTool's external file
+- searching optimal strategy parameters by brute force method with syntax `start..end:step` or `value1, value2, value3` in strat's toml file
+- value `ALL` for exchanges and strategies for backtest machine - do backtests on all available exchanges, currencies, assets or strategies. Based on filenames in history and strategies directories. 
+- add binaries for Linux and FreeBSD to [releases](https://github.com/xFFFFF/Gekko-BacktestTool/releases) 
+- backtest-config.pl updated
+- README.MD updated
+
 v0.5
 - price: *open*, *close*, *high*, *low*, *average* for dataset period in CSV output
 - [coinmarketcap.com](https://coinmarketcap.com) data in CSV output: *current marketcap*, *current rank*, *last 24h global volume*

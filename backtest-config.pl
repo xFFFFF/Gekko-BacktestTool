@@ -1,20 +1,19 @@
+no warnings qw(uninitialized);
 ############################# START OF CONFIGURATION #############################
 # Put your strategy names between brackets in line below. Strategy seperate with space or newline.
 @strategies = qw(
-BBRSI
-neuralnet
-RSI_BULL_BEAR 
+ALL
+MACD
+CCI
+RSI 
 );
 # Put your pairs between brackets in line below. Use exchange:currency:asset format. Seperate pair using space or newline.
 @pairs = qw(
-binance:BTC:ALL
-bitfinex:USD:ETP
-binance:USDT:BTC
-binance:BNB:XLM
-binance:BNB:NANO
-binance:BNB:VEN
-binance:BNB:NCASH
-
+ALL
+binance:ALL
+bitfinex:USD:ALL
+poloniex:BTC:ADA
+kraken:EUR:XBT
 );
 
 # Put your candle values between brackets in line below. Use CandleSize:WarmupPeriod format. Seperate pair using space or newline.
@@ -23,10 +22,6 @@ binance:BNB:NCASH
 11:70
 12:69
 13:65
-9:75
-8:80
-7:90
-6:100
 );
 
 # To specify time range for import or backtest uncomment lines below, but instead this you can use command line input ex.: backtest.pl --from "2018-01-01 00:00:00" --to "2018-01-05 00:00:00". If below lines are commented Gekko is using scan datasets feature in backtest mode. 
@@ -39,11 +34,19 @@ $csv = 'database.csv';
 # You can add note to project below. Note will be add in CSV file. Its can be useful when You are developing strategy.
 $note = 'first run';
 
+# Sort strategies in top list by. Available values to sort: best, profitable, profit_above_market, best_PL, worst_PL, profits_sum, avg_profit, trades_win, trades_day, hodl_time
+$top_strategy_sort1 = 'best';
+$top_strategy_sort2 = 'profitable';
+
+# Sort datasets ranking by. Available values to sort: best, profitable, profit_above_market, market_change, best_PL, worst_PL, profits_sum, avg_profit, trades_win, trades_day, hodl_time, price_volatility, cmc_rank, cmc_marketcap, cmc_volume, days
+$top_dataset_sort1 = 'best';
+$top_dataset_sort2 = 'profitable';
+
 # Template of CSV output columns. Format [% variable_name %], columns MUST be seperated by comma (,) without any space. 
 # Below is compact version
-$csv_columns = \ "[% currency %],[% asset %],[% strategy %],[% profit %],[% profit_day %],[% sharpe_ratio %],[% market_change %],[% trades %],[% trades_day %],[% percentage_wins %],[% best_win %],[% median_wins %],[% worst_loss %],[% median_losses %],[% avg_exposed_duration %],[% candle_size %],[% warmup_period %],[% dataset_days %],[% CMC_Rank %],[% current_marketcap %],[% open_price %],[% close_price %],[% lowest_price %],[% highest_price %],[% avg_price %],[% price_volality %],[% volume_day %],[% volume_CMC %],[% overall_trades_day %],[% note %]";
+$csv_columns = \ "[% currency %],[% asset %],[% strategy %],[% profit %],[% profit_market %],[% profit_day %],[% market_change %],[% trades_day %],[% percentage_wins %],[% best_win %],[% median_wins %],[% worst_loss %],[% median_losses %],[% avg_exposed_duration %],[% candle_size %],[% warmup_period %],[% dataset_days %],[% CMC_Rank %],[% current_marketcap %],[% open_price %],[% close_price %],[% lowest_price %],[% highest_price %],[% avg_price %],[% price_volality %],[% volume_day %],[% volume_CMC %],[% overall_trades_day %],[% dataset_from %],[% dataset_to %],[% strategy_settings %],[% note %]";
 
-# Minimalistic version
+# Minimalistic version - tables will dont generate
 #$csv_columns = \ "[% currency %],[% asset %],[% strategy %],[% profit %],[% profit_day %],[% profit_market %],[% trades_day %],[% percentage_wins %],[% best_win %],[% worst_loss %],[% avg_exposed_duration %],[% dataset_days %],[% CMC_Rank %],[% current_marketcap %],[% avg_price %],[% price_volality %],[% volume_day %],[% volume_CMC %],[% overall_trades_day %]";
 
 # Full version - all possible BacktestTool variables.

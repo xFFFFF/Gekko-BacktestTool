@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 no warnings qw(uninitialized);
 use strict;
 use Parallel::ForkManager;
@@ -11,20 +11,25 @@ use Getopt::Long qw(GetOptions);
 use Statistics::Basic qw(:all);
 use DBI;
 use JSON::XS;
-use TOML qw(from_toml);
+use TOML qw(from_toml to_toml);
 use File::Basename;
 use File::Temp qw/ tempfile tempdir mkdtemp /;
 use File::Find::Wanted;
 use Template qw( );
 use LWP::UserAgent ();
 use LWP::Protocol::https;
+use Set::CrossProduct;
+use DBD::CSV;
+use Text::Table;
+use File::Copy;
 
 $| = 1;
 
-our (@strategies, @pairs, @warmup, $from, $to, $csv, $print_roundtrips, $threads, $stratsettings, $keep_logs, $asset_c, $currency_c, $fee_maker, $fee_taker, $fee_using, $slippage, $riskFreeReturn, $use_toml_files, $toml_directory, $note, $tocsv, $csv_columns, $debug, $cmc_data);
-my ($oconfigfile, $ostrat, $opairs, $owarmup, $oimport, $opaper, $ohelp, $oconvert, $ofrom, $oto, $ocsv, %datasets, $json, $gconfig, $currency, $asset, $exchange, $strategy, $profit, $profit_day, $profit_year, $sharpe_ratio, $market_change, $profit_market, $trades, $trades_day, $winning_trades, $lost_trades, $percentage_wins, $best_win, $median_wins, $worst_loss, $median_losses, $avg_exposed_duration, $candlesize, $historysize, $dataset_days, $backtest_start, $dataset_from, $dataset_to, $price_volality, $volume, $volume_day, $overall_trades, $overall_trades_day, $template);
+our (@strategies, @pairs, @warmup, $from, $to, $csv, $print_roundtrips, $threads, $stratsettings, $keep_logs, $asset_c, $currency_c, $fee_maker, $fee_taker, $fee_using, $slippage, $riskFreeReturn, $use_toml_files, $toml_directory, $note, $tocsv, $csv_columns, $debug, $cmc_data, $top_strategy_sort1, $top_strategy_sort2, $all_results_sort, $top_dataset_sort1, $top_dataset_sort2);
+my ($oconfigfile, $ostrat, $opairs, $owarmup, $oimport, $opaper, $ohelp, $oconvert, $ofrom, $oto, $ocsv, %datasets, $json, $gconfig, $currency, $asset, $exchange, $strategy, $profit, $profit_day, $profit_year, $sharpe_ratio, $market_change, $profit_market, $trades, $trades_day, $winning_trades, $lost_trades, $percentage_wins, $best_win, $median_wins, $worst_loss, $median_losses, $avg_exposed_duration, $candlesize, $historysize, $dataset_days, $backtest_start, $dataset_from, $dataset_to, $price_volality, $volume, $volume_day, $overall_trades, $overall_trades_day, $template, $oanalyze);
 $backtest_start = strftime "%Y-%m-%d %H:%M:%S", localtime;
 my ($open_price, $close_price, $highest_price, $lowest_price, $avg_price);
+print "Gekko BacktestTool v0.6\nWebsite: https://github.com/xFFFFF/Gekko-BacktestTool\n\n";
 
 GetOptions(
   'config|c=s' => \$oconfigfile,
@@ -37,7 +42,8 @@ GetOptions(
   'convert|v=s' => \$oconvert,
   'strat|s=s' => \$ostrat,
   'pair|p=s' => \$opairs,
-  'candle|n=s' => \$owarmup
+  'candle|n=s' => \$owarmup,
+  'analyze|a=s' => \$oanalyze
 ) or die "Example: $0 --import --pair=bitfinex:USD:BTC --from=\"2018-01-01 09:10\" --to=\"2018-01-05 12:23\"\nUse backtest.pl --help for more details.\n";
 
 sub convert {
@@ -49,48 +55,261 @@ sub convert {
   local $/;
   $toml = <$fh>;
   }
+ # print $toml;
   close($fh);
 
   my ($data, $err) = from_toml($toml);
   unless ($data) {
     die "Error parsing toml: $err";
   }
+ # print $data;
   my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
   $json = $coder->encode ($data);
   $json =~ s/^{/config.$stratname = {\n/;
   return $json;
 }
+sub convert_json_toml {
+  my $toml;
+  #print "TU $_[0] \n";
+  if (defined $_[0]) {
+  my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
+  my $json = $coder->decode ($_[0]);
+  $toml = to_toml($json); 
+  }
+  else {
+    $toml = 'N/A';
+  }
+  
+  return $toml;
+
+}
 sub analyze {
+
+  my $randomfile = "tmp/aj".rand(10).".csv";
+  copy $_[0], $randomfile;
+  my @database = split '/', $_[0];
+  my $database = "$randomfile";
+  print "[".strftime ("%Y-%m-%d %H:%M:%S", localtime)."] Creating ALL RESULTS table (sorted profit/day)...\n";
+  my $dba = DBI->connect ("dbi:CSV:", "", "", {RaiseError => 0});
+  
+  my $query = "SELECT currency, asset, strategy, profit___, profit_market, profit_day___, trades_day, best_win, worst_loss, avg_HODL_min_, avg_price, overall_trades_day, volume_day FROM $database";
+  my $stc   = $dba->prepare ($query);
+  $stc->execute();
+  my @all_results;
+  my $all_results_min_profit = -999999;
+  my $all_results_min_profit_market = -99999999999;
+  my $all_results_min_profit_day = -9999;
+  my $all_results_min_trades_day = 0;
+  my $all_results_max_trades_day = 99999;
+  my $all_results_min_hodl_time = 1;
+  my $all_results_max_hodl_time = 99999;
+  while (my @row = $stc->fetchrow_array) {
+    if ($row[3] >= $all_results_min_profit && $row[4] >= $all_results_min_profit_market && $row[5] >=  $all_results_min_profit_day && $row[6] >= $all_results_min_trades_day && $row[6] <= $all_results_max_trades_day && $row[9] >= $all_results_min_hodl_time && $row[9] <=$all_results_max_hodl_time) {
+    push @all_results, [@row];
+  }
+  }
+  
+  my $table = Text::Table->new(  { align_title => 'right', align => 'left', title => "Curr.\n----" }, { align_title => 'right', align => 'left', title => "Asset\n-----"}, { align_title => 'left', align => 'left', title => "Strat\n-----"}, { align_title => 'right', align => 'right', title => "Profit\n------"}, { align_title => 'right', align => 'right', title => "Profit-market\n-------------"}, { align_title => 'right', align => 'right', title => "Profit/day\n------------" },  { align_title => 'right', align => 'right', title => "Trades/day\n----------"}, { align_title => 'right', align => 'right', title => "Best win\n--------"}, { align_title => 'right', align => 'right', title => "Worst loss\n----------"}, { align_title => 'right', align => 'right', title => "Avg.Hodl\n--------"}, { align_title => 'right', align => 'right', title => "Avg.price\n---------"}, { align_title => 'right', align => 'right', title => "Ov.trades/day\n-------------"}, { align_title => 'right', align => 'right', title => "Volume/day\n---------"} );
+  my @sorted_all_results = sort {$b->[5] <=> $a->[5]} @all_results;
+
+  foreach (@sorted_all_results) {
+    $table->load($_)
+  };
+
+  my $table_name = ' A L L     R E S U L T S ';
+  #print length $table_name;
+  my $rule_len = (($table->width - length $table_name) / 2);
+  print "\n".'=' x $rule_len.$table_name.'=' x ($rule_len + 1)."\n";
+  print $table;
+  print $table->rule('=', '=');
+  print "\n";
+  print "[".strftime ("%Y-%m-%d %H:%M:%S", localtime)."] Creating TOP STRATEGY table...\n";
+  my $stratdata;
+  my %top_strategies;
+  $query = "SELECT DISTINCT strategy, strategy_settings FROM $database";
+  $stc   = $dba->prepare ($query);
+  $stc->execute();
+  while (my @row = $stc->fetchrow_array) {
+    $stratdata = "$row[0];$row[1]";
+    $top_strategies{"$stratdata"}{nprofit} = 0;
+    $top_strategies{"$stratdata"}{best} = 0;
+     
+    $query = "SELECT AVG(avg_HODL_min_), AVG(profit___), MAX(profit___), MIN(profit___), AVG(trades_day), AVG(wins___), SUM(profit___), MAX(best_win), AVG(median_wins), MIN(worst_loss), AVG(median_losses) FROM $database WHERE strategy='$row[0]' AND strategy_settings='$row[1]'";
+    my $stc   = $dba->prepare ($query);
+    $stc->execute();
+    while (my @row2 = $stc->fetchrow_array) {
+ 
+      #my $top_strategies_min_avg_profit = -9999;
+      #my $top_strategies_min_best_profit = -9999;
+      #my $top_strategies_min_worst_profit = -9999;
+      #my $top_strategies_min_trades_day = 0;
+      #my $top_strategies_max_trades_day = 1;
+      #my $top_strategies_min_hodl_time = 0;
+      #my $top_strategies_max_hodl_time = 999999999;
+      #my $top_strategies_min_percent_wins = 60;
+      #my $top_strategies_min_worst_trade = -999999;
+  
+      #if ($row2[0] > $top_strategies_min_hodl_time && $row2[0] > $top_strategies_max_hodl_time && $row2[1] > $top_strategies_min_avg_profit && $row2[2] > $top_strategies_min_best_profit, $row2[3] > $top_strategies_min_worst_profit && $row2[4] > $top_strategies_min_trades_day && $row2[4] < $top_strategies_max_trades_day && $row2[5] > $top_strategies_min_percent_wins && $row2[9] > $top_strategies_min_worst_trade) {
+      
+        $top_strategies{"$stratdata"}{hodl_time} = sprintf("%d", $row2[0]);
+        $top_strategies{"$stratdata"}{avg_profit} = sprintf("%.2f", $row2[1]);
+        $top_strategies{"$stratdata"}{worst_PL} = sprintf("%.1f", $row2[3]);
+        $top_strategies{"$stratdata"}{best_PL} = sprintf("%.1f", $row2[2]);
+        $top_strategies{"$stratdata"}{trades_day} = sprintf("%.1f", $row2[4]);
+        $top_strategies{"$stratdata"}{trades_win} = sprintf("%.1f", $row2[5]);
+        $top_strategies{"$stratdata"}{profits_sum} = sprintf("%d", $row2[6]);
+        $top_strategies{"$stratdata"}{best_win_trade} = sprintf("%.2f", $row2[7]);
+        $top_strategies{"$stratdata"}{avg_win_trade} = sprintf("%.2f", $row2[8]);
+        $top_strategies{"$stratdata"}{worst_loss_trade} = sprintf("%.2f", $row2[9]);
+        $top_strategies{"$stratdata"}{avg_loss_trade} = sprintf("%.2f", $row2[10]);
+      #}
+    }
+    
+    $query = "SELECT profit___, profit_market  FROM $database WHERE strategy='$row[0]' AND strategy_settings='$row[1]'";
+    $stc   = $dba->prepare ($query);
+    $stc->execute();
+    my $counter = 0;
+    while (my @row2 = $stc->fetchrow_array) {
+      ++$counter;
+      if ($row2[0] > 0) {
+        ++$top_strategies{"$stratdata"}{profitable};
+      }
+      if ($row2[1] > 0) {
+        ++$top_strategies{"$stratdata"}{profit_above_market};
+      }
+    }
+    $top_strategies{"$stratdata"}{profitable} = sprintf("%d", ($top_strategies{"$stratdata"}->{profitable} * 100 / $counter));
+    $top_strategies{"$stratdata"}{profit_above_market} = sprintf("%d", ($top_strategies{"$stratdata"}->{profit_above_market} * 100 / $counter));
+  }
+  
+  $query = qq(SELECT DISTINCT currency, asset, dataset_from, to FROM $database);
+  $stc   = $dba->prepare ($query);
+  $stc->execute();
+  
+  while (my @row = $stc->fetchrow_array) {
+    
+    $query = "SELECT strategy, profit_day___, strategy_settings FROM $database WHERE currency='$row[0]' AND asset='$row[1]' AND dataset_from='$row[2]' AND to='$row[3]' ORDER by profit_day___ desc limit 1";
+    my $stc   = $dba->prepare ($query);
+    $stc->execute();
+    while (@row = $stc->fetchrow_array) {
+      $stratdata = "$row[0];$row[2]";
+      ++$top_strategies{"$stratdata"}{best};
+    }
+  }
+  $table = Text::Table->new( "Strat\n\n-----",  { align_title => 'center', align => 'right', title => "Best\n\n----"}, { align_title => 'right', align => 'right', title => "%     \nprofitable\n----------"}, { align_title => 'right', align => 'right', title => "% profit > \nmarket   \n----------"}, { align_title => 'right', align => 'right', title => "Best \n% P/L\n-----"}, { align_title => 'right', align => 'right', title => "Worst\n% P/L\n-----"}, { align_title => 'right', align => 'right', title => "Sum %\nprofit\n-----"}, { align_title => 'right', align => 'right', title => "Avg %\nprofit\n------"}, { align_title => 'right', align => 'right', title => "% Avg win\n trades \n---------"}, { align_title => 'right', align => 'right', title => "Best \ntrade\n-----"}, { align_title => 'right', align => 'right', title => "Avg trade\nprofit \n---------"}, { align_title => 'right', align => 'right', title => "Worst\ntrade\n-----"}, { align_title => 'right', align => 'right', title => "Avg trade\nloss   \n---------"}, { align_title => 'right', align => 'right', title => "Avg   \ntrades/day\n----------"}, { align_title => 'right', align => 'right', title => "Avg   \nHODL min\n---------"});
+  
+  foreach my $keys (sort {$top_strategies{$b}{$top_strategy_sort1}<=>$top_strategies{$a}{$top_strategy_sort1} or $top_strategies{$b}{$top_strategy_sort2}<=>$top_strategies{$a}{$top_strategy_sort2}} keys %top_strategies) {
+    my @strathuman = split /;/, $keys;
+    $table->add($strathuman[0], $top_strategies{$keys}->{best}, $top_strategies{$keys}->{profitable}, $top_strategies{$keys}->{profit_above_market}, $top_strategies{$keys}->{best_PL}, $top_strategies{$keys}->{worst_PL}, $top_strategies{$keys}->{profits_sum}, $top_strategies{$keys}->{avg_profit}, $top_strategies{$keys}->{trades_win}, $top_strategies{"$keys"}->{best_win_trade}, $top_strategies{"$keys"}->{avg_win_trade}, $top_strategies{"$keys"}->{worst_loss_trade}, $top_strategies{"$keys"}->{avg_loss_trade}, $top_strategies{$keys}->{trades_day}, $top_strategies{$keys}->{hodl_time});
+  }
+  
+    
   
   
-  #use Text::Table;
+  $table_name = ' T O P    S T R A T E G Y ';
+  my $rule_len = (($table->width - length $table_name) / 2);
+  print "\n".'=' x $rule_len.$table_name.'=' x ($rule_len + 1)."\n";
+  print $table;
+  print $table->rule('=', '=');
+  print "\n";
+  print "[".strftime ("%Y-%m-%d %H:%M:%S", localtime)."] Creating TOP DATASET table...\n";
+  my %top_dataset;
+  my $pairdata;
+  $query = "SELECT DISTINCT currency, asset, dataset_from, to FROM $database";
+  $stc   = $dba->prepare ($query);
+  $stc->execute();
+  while (my @row = $stc->fetchrow_array) {
+    $pairdata = "$row[0]:$row[1];$row[2]$row[3]";
+    $top_dataset{$pairdata}{nprofit} = 0;
+    $top_dataset{$pairdata}{best} = 0;
+     
+    $query = "SELECT AVG(avg_HODL_min_), AVG(profit___), MAX(profit___), MIN(profit___), AVG(trades_day), AVG(wins___), SUM(profit___) FROM $database WHERE currency='$row[0]' AND asset='$row[1]' AND dataset_from='$row[2]' AND to='$row[3]' ";
+    my $stc   = $dba->prepare ($query);
+    $stc->execute();
+    while (my @row2 = $stc->fetchrow_array) {
+      
+      #my $top_pairs_min_avg_profit = -9999;
+      #my $top_pairs_min_best_profit = -9999;
+      #my $top_pairs_min_worst_profit = -9999;
+      #my $top_pairs_min_trades_day = 0;
+      #my $top_pairs_max_trades_day = 9999;
+      #my $top_pairs_min_hodl_time = 0;
+      #my $top_pairs_max_hodl_time = 999999999;
+      #my $top_pairs_min_percent_wins = 0;
   
-  #my $tprofitd = Text::Table->new( "Pair\n----", "Strat\n-----", "Profit\n------", "Profit-market\n-------------", "Trades\n------", "% wins\n------", "Best win\n--------", "Worst loss\n----------", "Avg.Hodl\n--------", "Avg.price\n---------", "Ov.trades\n---------", "Volume\n------");
-  #my @sorted;
-  #foreach (@sorted) {
-     #$tprofitd->add(
-    #$_->{'currency'}.'-'.$_->{'asset'},
-    #$_->{'strategy'},
-    #$_->{'profit[%]'},
-    #$_->{'"profit-market"'},
-    #$_->{'trades_day'},
-    #$_->{'wins[%]'},
-    #$_->{'"best win"'},
-    #$_->{'"worst loss"'},
-    #$_->{'"avg HODL[min]"'},
-    #$_->{'"avg. price"'},
-    #$_->{'"volatility"'},
-    #$_->{'"overall trades_day"'},
-    #$_->{'volume_day'}
-    #)
-  #}
-  #$tprofitd->add(' ');
-  #print $tprofitd;
+      #if ($row2[0] > $top_pairs_min_hodl_time && $row2[0] > $top_pairs_max_hodl_time && $row2[1] > $top_pairs_min_avg_profit && $row2[2] > $top_pairs_min_best_profit, $row2[3] > $top_pairs_min_worst_profit && $row2[4] > $top_pairs_min_trades_day && $row2[4] < $top_pairs_max_trades_day && $row2[5] > $top_pairs_min_percent_wins) {
+      
+        $top_dataset{$pairdata}{hodl_time} = sprintf("%d", $row2[0]);
+        $top_dataset{$pairdata}{avg_profit} = sprintf("%.1f", $row2[1]);
+        $top_dataset{$pairdata}{worst_PL} = sprintf("%.1f", $row2[3]);
+        $top_dataset{$pairdata}{best_PL} = sprintf("%.1f", $row2[2]);
+        $top_dataset{$pairdata}{trades_day} = sprintf("%.1f", $row2[4]);
+        $top_dataset{$pairdata}{trades_win} = sprintf("%.1f", $row2[5]);
+        $top_dataset{$pairdata}{profits_sum} = sprintf("%d", $row2[6]);
+      #}
+    }
+    
+    $query = "SELECT profit___, profit_market, volatility, cur_CMC_rank, cur_marketcap, cur_CMC_volume, days, market_change___ FROM $database WHERE currency='$row[0]' AND asset='$row[1]' AND dataset_from='$row[2]' AND to='$row[3]' ";
+    $stc   = $dba->prepare ($query);
+    $stc->execute();
+    my $counter = 0;
+    $top_dataset{$pairdata}{profitable} = 0;
+    $top_dataset{$pairdata}{profit_above_market} = 0;
+    while (my @row2 = $stc->fetchrow_array) {
+      ++$counter;
+      if ($row2[0] > 0) {
+        ++$top_dataset{$pairdata}{profitable};
+      }
+      if ($row2[1] > 0) {
+        ++$top_dataset{$pairdata}{profit_above_market};
+      }
+      $top_dataset{$pairdata}{price_volatility} = $row2[2];
+      $top_dataset{$pairdata}{cmc_rank} = $row2[3];
+      $top_dataset{$pairdata}{cmc_marketcap} = $row2[4];
+      $top_dataset{$pairdata}{cmc_volume} = $row2[5];
+      $top_dataset{$pairdata}{days} = $row2[6];
+      $top_dataset{$pairdata}{market_change} = $row2[7];
+    }
+    if ($counter > 0) {
+      $top_dataset{$pairdata}{profitable} = sprintf("%d", ($top_dataset{$pairdata}->{profitable} * 100 / $counter));
+      $top_dataset{$pairdata}{profit_above_market} = sprintf("%d", ($top_dataset{$pairdata}->{profit_above_market} * 100 / $counter));
+    }
+  }
   
+  $query = qq(SELECT DISTINCT strategy, strategy_settings FROM $database);
+  $stc   = $dba->prepare ($query);
+  $stc->execute();
   
+  while (my @row = $stc->fetchrow_array) {
+    $query = "SELECT currency, asset, profit_day___, dataset_from, to FROM $database WHERE strategy='$row[0]' AND strategy_settings='$row[1]' ORDER by profit_day___ desc limit 1";
+    my $stc   = $dba->prepare ($query);
+    $stc->execute();
+    while (@row = $stc->fetchrow_array) {
+      $pairdata = "$row[0]:$row[1];$row[3]$row[4]";
+      ++$top_dataset{$pairdata}{best};
+    }
+  }
+  my $aligntable = "{ align_title => 'right', align => 'right', title => ";
+  $table = Text::Table->new( "Pair\n\n-----", { align_title => 'right', align => 'right', title => "Best\n\n----"}, { align_title => 'right', align => 'right', title => "%     \nprofitable\n----------"}, { align_title => 'right', align => 'right', title => "% profit > \nmarket  \n----------"}, { align_title => 'right', align => 'right', title => "% Market\nchange \n--------"}, { align_title => 'right', align => 'right', title => "Best \n% P/L\n-----"}, { align_title => 'right', align => 'right', title => "Worst \n% P/L\n-----"}, { align_title => 'right', align => 'right', title => "Sum %\nprofit\n-----"}, { align_title => 'right', align => 'right', title => "Avg %\nprofit\n------"}, { align_title => 'right', align => 'right', title => "% Avg win\ntrades \n---------"}, { align_title => 'right', align => 'right', title => "Avg   \ntrades/day\n----------"}, { align_title => 'right', align => 'right', title => "Avg  \nHODL min\n---------"}, { align_title => 'right', align => 'right', title => "Price  \nvolatility\n----------"}, { align_title => 'right', align => 'right', title => " CMC \nRank\n----"}, { align_title => 'right', align => 'right', title => " Current \nmarketcap\n---------"}, { align_title => 'right', align => 'right', title => "Current  \nCMC volume\n----------"}, { align_title => 'right', align => 'right', title => "Days\n\n----"});
+  $table->rule( sub { my ($index, $len) = @_; }, sub { my ($index, $len) = @_; },);
+  
+  foreach my $keys (sort {$top_dataset{$b}{$top_dataset_sort1}<=>$top_dataset{$a}{$top_dataset_sort1} or $top_dataset{$b}{$top_dataset_sort2}<=>$top_dataset{$a}{$top_dataset_sort2}} keys %top_dataset) {
+  my @pairhuman = split /;/, $keys;
+    $table->add($pairhuman[0], $top_dataset{$keys}->{best}, $top_dataset{$keys}->{profitable}, $top_dataset{$keys}->{profit_above_market}, $top_dataset{$keys}->{market_change}, $top_dataset{$keys}->{best_PL}, $top_dataset{$keys}->{worst_PL}, $top_dataset{$keys}->{profits_sum}, $top_dataset{$keys}->{avg_profit}, $top_dataset{$keys}->{trades_win}, $top_dataset{$keys}->{trades_day}, $top_dataset{$keys}->{hodl_time}, $top_dataset{$keys}->{price_volatility}, $top_dataset{$keys}->{cmc_rank}, $top_dataset{$keys}->{cmc_marketcap}, $top_dataset{$keys}->{cmc_volume}, $top_dataset{$keys}->{days});
+  }
+  
+  $table_name = ' T O P    D A T A S E T ';
+  my $rule_len = (($table->width - length $table_name) / 2);
+  print "\n".'=' x $rule_len.$table_name.'=' x ($rule_len + 1)."\n";
+  print $table;
+  print $table->rule('=', '=');
+  print "\n";
+  
+  unlink $randomfile;
 }
 
 sub toepoch {
+  #print "$_[0]\n";
   my @a = split /[- :]/, $_[0];
   $a[0] =~ s/^.{2}//;
   if (! defined $a[5]) {
@@ -189,7 +408,9 @@ config.backtest = {
 config['I understand that Gekko only automates MY OWN trading strategies'] = true;
 module.exports = config;
 );
+
 my $tmpfile = 'tmp';
+unlink glob "$tmpfile/*";
 mkdir $tmpfile unless -d $tmpfile;
 
 if ($oimport) {  
@@ -402,17 +623,18 @@ To run other features
 Mode:
   -i, --import\t - Import new datasets
   -g, --paper\t - Start multiple sessions of PaperTrader
-  -v, --convert TOMLFILE\t - Convert TOML file to Gekko's CLI config format, ex: backtest.pl -v MACD.toml
+  -v, --convert TOMLFILE - Convert TOML file to Gekko's CLI config format, ex: backtest.pl -v MACD.toml
+  -a, --analyze CSVFILE\t - Perform comparision of strategies and pairs from csv file, ex: backtest.pl -a database.csv
   
 Optional parameters:
   -c, --config\t\t - BacktestTool config file. Default is backtest-config.pl
-  -s, --strat STRATEGY_NAME - Define strategies for backtests. You can add multiple strategies seperated by commas example: backtest.pl --strat=MACD,CCI
+  -s, --strat STRAT_NAME - Define strategies for backtests. You can add multiple strategies seperated by commas example: backtest.pl --strat=MACD,CCI
   -p, --pair PAIR\t - Define pairs to backtest in exchange:currency:asset format ex: backtest.pl --p bitfinex:USD:AVT. You can add multiple pairs seperated by commas.
   -p exchange:ALL\t - Perform action on all available pairs. Other usage: exchange:USD:ALL to perform action for all USD pairs.
   -n, --candle CANDLE\t - Define candleSize and warmup period for backtest in candleSize:warmup format, ex: backtest.pl -n 5:144,10:73. You can add multiple values seperated by commas.
-  -f, --from
+  -f, --from\t\t- Time range for backtest datasets or import. Example: backtest.pl --from="2018-01-01 09:10" --to="2018-01-05 12:23"
+  -t, --to
   -f last\t\t- Start import from last candle available in DB. If pair not exist in DB then start from 24h ago.
-  -t, --to\t\t - Time range for backtest datasets or import. Example: backtest.pl --from="2018-01-01 09:10" --to="2018-01-05 12:23"
   -t now\t\t- 'now' is current time in GMT.
   -o, --output FILENAME - CSV file name.
 };
@@ -424,16 +646,88 @@ if ($oconvert) {
   print "Input: $oconvert\nOutput:\n";
   print $json;
 }
+if ($oanalyze) {
+  &analyze($oanalyze);
+}
 
 else {
   my $pm = Parallel::ForkManager->new($threads);
+  
   my (%paircalc, %lookup, $req, $pairname);
      my (%cmcvolume, %cmcrank, %cmcmarketcap);
-  my $tmpcsv = File::Temp->new(UNLINK => 1, TEMPLATE => "tmp_dataXXXXX",SUFFIX => ".csv",DIR => $tmpfile);
+  my $tmpcsv = File::Temp->new(TEMPLATE => "tmp_dataXXXXX",SUFFIX => ".csv",DIR => $tmpfile);
   $pm->run_on_finish(sub {
     my $data = pop @_;
     %paircalc = (%paircalc, %$data);
   });
+  
+  if ($ocsv) {
+    $csv = $ocsv
+  }
+  
+  my $vars = {
+    'currency' => 'currency',
+    'asset' => 'asset',
+    'exchange' => 'exchange',
+    'strategy' => 'strategy',
+    'profit' => 'profit[%]',
+    'profit_day' => 'profit/day[%]',
+    'profit_year' => 'profit/year[%]',
+    'sharpe_ratio' => 'sharpe ratio',
+    'market_change' => 'market change[%]',
+    'profit_market' => 'profit-market',
+    'trades' => 'trades',
+    'trades_day' => 'trades/day',
+    'winning_trades' => 'winning trades',
+    'lost_trades' => 'lost trades',
+    'percentage_wins' => 'wins[%]',
+    'best_win' => 'best win',
+    'median_wins' => 'median wins',
+    'worst_loss' => 'worst loss',
+    'median_losses' => 'median losses',
+    'avg_exposed_duration' => 'avg HODL[min]',
+    'candle_size' => 'candleSize',
+    'warmup_period' => 'historySize',
+    'dataset_days' => 'days',
+    'backtest_start' => 'start',
+    'dataset_from' => 'dataset from',
+    'dataset_to' => 'to',
+    'CMC_Rank' => 'cur CMC rank',
+    'current_marketcap' => 'cur marketcap',
+    'open_price' => 'open price',
+    'close_price' => 'close',
+    'lowest_price' => 'low',
+    'highest_price' => 'high',
+    'avg_price' => 'avg price',
+    'price_volality' => 'volatility',
+    'volume' => 'volume',
+    'volume_day' => 'volume/day',
+    'volume_CMC' => 'cur CMC volume',
+    'overall_trades' => 'overall trades',
+    'overall_trades_day' => 'overall trades/day',
+    'strategy_settings' => 'strategy settings',
+    'note' => 'note'
+  };
+  if ( ! -e $csv) {
+    sub columns {
+      my $out;
+      $tocsv = Template->new({ });
+      $tocsv->process($_[0], $vars, \$out);
+      open my $fh3, '>>', $csv or die "Cannot open $csv!";
+      print $fh3 join ("\n","$out\r\n");
+      close $fh3;
+    }
+    &columns($csv_columns);
+  }
+  my ($tocsvtmp, $varstmp, $csvouttmp);
+  my $csv_columns_tmp = \ "[% currency %],[% asset %],[% exchange %],[% strategy %],[% profit %],[% profit_day %],[% profit_market %],[% trades_day %],[% percentage_wins %],[% best_win %],[% worst_loss %],[% avg_exposed_duration %],[% avg_price %],[% price_volality %],[% volume_day %],[% overall_trades_day %],[% strategy_settings %],[% dataset_from %],[% dataset_to %],[% price_volality %],[% CMC_Rank %],[% current_marketcap %],[% volume_CMC %],[% dataset_days %],[% market_change %],[% best_win %],[% median_wins %],[% worst_loss %],[% median_losses %]\r\n";
+  my $outtmp;
+  $tocsvtmp = Template->new({ });
+  $tocsvtmp->process($csv_columns_tmp, $vars, \$outtmp);
+  open my $fh3, '>>', $tmpcsv or die "Cannot open $tmpcsv!";
+  print $fh3 $outtmp;
+  close $fh3;
+    
   if ($cmc_data eq 'yes') {
     $req = LWP::UserAgent->new;        
     $req->agent("Gekko BacktestTool");
@@ -442,7 +736,12 @@ else {
     
     if ($response->is_success) {
    
-      $response = decode_json($response->content);
+      if ($response) {
+        $response = decode_json($response->content);
+      }
+      else {
+        $response = '   ';
+      }
       
       
       %cmcvolume = map { $_->{symbol} => $_->{'24h_volume_usd'}} @$response;
@@ -462,6 +761,16 @@ else {
     @strategies = split /,/, $ostrat;
   }
 
+  if (grep /^ALL$/, @pairs) {
+    my @exchanges_list = <history/*_0.1.db>;
+    foreach (@exchanges_list) {
+      print "Exchange list: $_\n";
+      $_ = basename($_);
+      $_ =~ s/_0.1.db$/:ALL/g;
+      push @pairs, $_;
+    }
+  }
+  @pairs = grep ! /(?<!:)(ALL)/, @pairs;
   foreach (@pairs) {
     my @sets = split /:/, $_;
     if ($sets[1] =~ /ALL/ || $sets[2]=~/ALL/) {
@@ -493,10 +802,21 @@ else {
           }
         }
       }
-      @pairs = grep !/ALL/, @pairs;
+      
     }
   }
+  @pairs = grep !/ALL/, @pairs;
   
+  if (grep /ALL/, @strategies) {
+  my @strategies_list = <strategies/*.js>;
+  foreach (@strategies_list) {
+    $_ = basename($_);
+    $_ =~ s/.js$//g;
+    push @strategies, $_;
+  }
+  }
+  @strategies = grep ! /ALL/, @strategies;
+
   $paircalc{"cmcvol$pairname"} = 'NA';
   $paircalc{"cmcrank$pairname"} = 'NA';
   $paircalc{"cmccurmarketcap$pairname"} = 'NA';
@@ -540,42 +860,302 @@ else {
     }
   }
   
+  my %stratconfig;
+  my %stratconfigtemp;
+  my $strat;
+  
+  if ($use_toml_files eq 'yes') {
+    foreach $strat (@strategies) {
+      my @file_list = <config/strategies/$strat.*>;
+      print @file_list;
+ #     sleep 1000;
+      my $substitute;
+      
+      if (@file_list) {
+        print "true";
+        open(my $fh, '<', $file_list[0]) or die "cannot open file $_[0]";
+        {
+          local $/;
+          $substitute = <$fh>;
+        }
+        close($fh);
+        
+        if ($substitute =~ /(?:(?:[\d-\.]+[, ]+)+[\d-\.]+)|([-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*)/) {
+           
+          if ($substitute =~ /(?<!")\b(?:(?:[\d-\.]+[, ]+)+[\d-\.]+)\b(?!")/) {
+          
+            unlink $file_list[0];
+            $substitute =~ s/"*(((?!\")[\d-\.]+[, ]+)+[\d-\.]+)"*/"\1"/g;
+            open (my $fh, '>>', $file_list[0]);
+            print $fh $substitute;
+            close $fh;
+          }
+          
+          if ($substitute =~ /(?<!")\b([-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*)/) {
+           
+            unlink $file_list[0];
+            $substitute =~ s/"*([-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*)"*/"\1"/g;
+            open (my $fh, '>>', $file_list[0]);
+            print $fh $substitute;
+            close $fh;
+          }
+        }
+       
+        $stratconfig{$strat} = &convert($file_list[0]);
+      }
+      else {
+        $stratconfig{$strat} = '';
+      }
+      
+      if ($stratconfig{$strat} =~ /[-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*/ && $stratconfig{$strat} =~ /(?:(?:[\d-\.]+[, ]+)+[\d-\.]+)/) {
+        
+        my @match1 = $stratconfig{$strat} =~ /[-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*/g;
+        my @match2 = $stratconfig{$strat} =~ /(?:(?:[\d-\.]+[, ]+)+[\d-\.]+)/sg;
+        
+        my (@aoa2, @tuples1, $b1);
+       
+        foreach (@match2) {
+          $_ =~ s/ //g;
+          my @bfval = split /,/, $_;
+          push @aoa2, [@bfval];
+        }
+
+        if (scalar @aoa2 > 1) {
+          my $unlabeled = Set::CrossProduct->new( \@aoa2 );
+          @tuples1 = $unlabeled->combinations;
+          $b1 = scalar (@{@tuples1[0]});
+        }
+        else {
+          @tuples1 = @aoa2;
+          $b1 = scalar (@tuples1);
+        }
+
+        my (@arraytmp, @stratconfcalues, @matchcyfra, @stratconfcomb, $stratconffin);
+        
+        foreach (@match1) {
+          @arraytmp = ();
+          @matchcyfra = split /\.\.|:/, $_;
+          
+          if ($matchcyfra[0] > $matchcyfra[1]) {
+            ($matchcyfra[0], $matchcyfra[1]) = ($matchcyfra[1], $matchcyfra[0]);
+          }
+          if (($matchcyfra[1] - $matchcyfra[0]) < $matchcyfra[2]) {
+            print "Too few possibilities from the expression: $matchcyfra[0]..$matchcyfra[1]:$matchcyfra[2]. Try extend range by first (range start) and/or second (range end) value and/or reduce step - third value. \n\nEg: expression 0..10:2 generate 0, 2, 4, 6, 8, 10 values for strat parameter.\n";
+              exit
+          }
+
+          for (my $i = $matchcyfra[0]; $i <= $matchcyfra[1]; $i += $matchcyfra[2]) {
+            push @arraytmp, $i;
+            }
+          push @stratconfcalues, [@arraytmp];
+        }
+  
+        my (@tuples2, $b2);
+        if (scalar @stratconfcalues > 1) {
+          my $unlabeled = Set::CrossProduct->new( \@stratconfcalues );
+          @tuples2 = $unlabeled->combinations;
+          $b2 = scalar (@{@tuples2[0]});
+        }
+        else {
+          @tuples2 = @stratconfcalues;
+          $b2 = scalar (@tuples2);            
+        }
+
+        foreach my $taba2 (@tuples2) {
+          my $s = $stratconfig{$strat};
+          if ($b2 > 1) {
+            for (my $i = 0; $i <= ($b2 - 1); $i++) {
+              $stratconffin = $taba2->[$i];
+              $s =~ s/[-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*/$stratconffin/;
+            }
+            my $ddd = $strat.' '.join('|', map {"$_"} @{$taba2});   
+            $stratconfigtemp{$ddd} = $s;
+          }
+          else {
+            foreach (@{$taba2}) {
+              $s = $stratconfig{$strat};
+              $s =~ s/\"[-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*\"/$_/;
+              my $ddd = $strat.' '."$_"; 
+              $stratconfigtemp{$ddd} = $s;
+            }
+          }
+        }
+     
+        foreach my $s77 (keys %stratconfigtemp) {
+          my $d;
+          foreach my $taba1 (@tuples1) {
+            $d = $stratconfigtemp{$s77};
+            foreach (@{$taba1}) {
+              $d =~ s/(?:(?:\"[-\d-\.]+[, ]+)+[-\d-\.]+\")/$_/s;
+              my $ccc = $b1 > 1 ? "|".join('|', map {"$_"} @{$taba1}) : '|'."$_"; 
+              $stratconfigtemp{$s77.$ccc} = $d;
+            }
+          }
+          delete $stratconfigtemp{$s77};
+        }
+        delete $stratconfig{$strat};
+      }
+      if ($stratconfig{$strat} =~ /[-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*/) {
+        my @match = $stratconfig{$strat} =~ /[-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*/g;
+        my (@arraytmp, @stratconfcalues, @matchcyfra, @stratconfcomb, $stratconffin, @tuples);
+        foreach (@match) {
+          @arraytmp = ();
+          @matchcyfra = split /\.\.|:/, $_;
+          if ($matchcyfra[0] > $matchcyfra[1]) {
+            ($matchcyfra[0], $matchcyfra[1]) = ($matchcyfra[1], $matchcyfra[0]);
+          }
+          if (($matchcyfra[1] - $matchcyfra[0]) < $matchcyfra[2]) {
+            print "Too few possibilities from the expression: $matchcyfra[0]..$matchcyfra[1]:$matchcyfra[2]. Try extend range by first (range start) and/or second (range end) value and/or reduce step - third value. \n\nEg: expression 0..10:2 generate 0, 2, 4, 6, 8, 10 values for strat parameter.\n";
+            exit
+          }
+          for (my $i = $matchcyfra[0]; $i <= $matchcyfra[1]; $i += $matchcyfra[2]) {
+            push @arraytmp, $i;
+          }
+          push @stratconfcalues, [@arraytmp];
+        }
+        
+        if (scalar @stratconfcalues > 1) {
+          my $unlabeled = Set::CrossProduct->new( \@stratconfcalues );
+          @tuples = $unlabeled->combinations;
+          $b = scalar (@{@tuples[0]});
+        }
+        else {
+          @tuples = @stratconfcalues;
+          $b = scalar (@tuples);
+        }
+        
+        my $tmp;
+        foreach (@tuples) {
+          $tmp+=scalar @{$_};
+        }
+
+        foreach my $taba (@tuples) {
+          my $s = $stratconfig{$strat};
+          if ($b > 1) {
+            for (my $i = 0; $i <= ($b - 1); $i++) {
+              $stratconffin = $taba->[$i];
+              $s =~ s/[-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*/$stratconffin/;
+            }
+
+            my $ddd = $strat.' '.join('|', map {"$_"} @{$taba});   
+            $stratconfigtemp{$ddd} = $s;
+          }
+          else {
+            foreach (@{$taba}) {
+              $s = $stratconfig{$strat};
+              $s =~ s/\"[-\d+\.]*\.\.[-\d+\.]*:[-\d+\.]*\"/$_/;
+              my $ddd = $strat.' '."$_"; 
+              $stratconfigtemp{$ddd} = $s;
+            }
+          }
+        }
+        delete $stratconfig{$strat};
+      }
+      if ($stratconfig{$strat} =~ /(?:(?:[\d-\.]+[, ]+)+[\d-\.]+)/) {
+        my @match = $stratconfig{$strat} =~ /(?:(?:[\d-\.]+[, ]+)+[\d-\.]+)/sg;
+        my (@aoa, $b);
+    
+        foreach (@match) {
+          $_ =~ s/ //g;
+          my @dupa = split /,/, $_;
+          push @aoa, [@dupa];
+        }
+    
+        my @tuples;
+        
+        if (scalar @aoa > 1) {
+          my $unlabeled = Set::CrossProduct->new( \@aoa );
+          @tuples = $unlabeled->combinations;
+          $b = scalar (@{@tuples[0]});
+        }
+        else {
+          @tuples = @aoa;
+          $b = scalar (@tuples);
+        }
+          
+        my $d;
+        foreach my $taba (@tuples) {
+          $d = $stratconfig{$strat};
+          foreach (@{$taba}) {
+            $d =~ s/(?:(?:[-\d-\.]+[, ]+)+[-\d-\.]+)/$_/s;
+            my $ddd = $b > 1 ? $strat.' '.join('|', map {"$_"} @{$taba}) : $strat.' '."$_"; 
+            $stratconfigtemp{$ddd} = $d;
+          }
+        }
+        delete $stratconfig{$strat};
+        delete $stratconfigtemp{$strat};
+      }
+      %stratconfig = (%stratconfig, %stratconfigtemp);
+      print "[".strftime ("%Y-%m-%d %H:%M:%S", localtime)."] Brute Force mode enabled\n";
+    } 
+  }
+
   my $startapp = time;
-  my $remain = scalar @pairs * scalar @strategies * scalar @warmup;
+  my $remain = scalar @pairs * scalar (keys %stratconfig) * scalar @warmup;
   my $palist = join(', ', map {"$_"} @pairs);
   my $stlist = join(', ', map {"$_"} @strategies);
   my $walist = join(', ', map {"$_"} @warmup);
-  print "$remain backtest to do on pairs: $palist, strategies: $stlist, candles: $walist\n";
+  print "[".strftime ("%Y-%m-%d %H:%M:%S", localtime)."] Starting Backtest Machine...
+
+============================================================== I N P U T    D A T A ===============================================================
+Pairs
+-----
+$palist
+
+Total: ".scalar @pairs."
+===================================================================================================================================================
+Strategies
+----------
+$stlist
+
+Total: ".scalar (@strategies);
+if (scalar (keys %stratconfig) > scalar (@strategies)) {
+print " (".scalar (keys %stratconfig)." different settings)";
+}
+print "
+===================================================================================================================================================
+Candles
+-------
+$walist
+
+Total: ".scalar @warmup."
+===================================================================================================================================================
+
+[".strftime ("%Y-%m-%d %H:%M:%S", localtime)."] $remain backtests remain
+
+============================================================= L A S T    R E S U L T S ============================================================\n";
+
+
+  my $outformat = "%-9s %+40s %+12s %+15s %+11s %+11s %+9s %+11s %+7s %+5s %+6s";
+  printf $outformat, "Pair","Strategy","Profit","Profit-market","Trades/day","Win trades","Best win","Worst loss", "Candle","Days","Time";
+  print "\n----                                      --------       ------   -------------  ----------  ----------  --------  ----------  ------  ----   ----\n";
   foreach (@warmup) {
-    if (@warmup >= @strategies && @warmup >= @pairs && @warmup > 1) {
+    if (@warmup >= scalar (keys %stratconfig) && @warmup >= @pairs && @warmup > 1) {
       my $pid = $pm->start and next;
     }
     my @warms = split /:/, $_;
     
     foreach (@pairs) {
-      if (@pairs > @strategies && @pairs >= @warmup && @pairs > 1) {
+      if (@pairs > scalar (keys %stratconfig) && @pairs >= @warmup && @pairs > 1) {
         my $pid = $pm->start and next;
       }
       my @sets = split /:/, $_;
-
-      foreach (@strategies) {
-        if (@strategies >= @pairs && @strategies >= @warmup && @strategies > 1) {
+      
+      foreach my $stratn (keys %stratconfig) {
+        if (scalar (keys %stratconfig) >= @pairs && scalar (keys %stratconfig) >= @warmup && scalar (keys %stratconfig) > 1) {
           my $pid = $pm->start and next;
         }
      
         my $startthread = time;
   
-        $configfile = File::Temp->new(UNLINK => 1, TEMPLATE => "tmp_configXXXXX",SUFFIX => ".js",DIR => $tmpfile);
-        $configfile->unlink_on_destroy( 1 );
-        File::Temp::cleanup();
+        $configfile = File::Temp->new(TEMPLATE => "tmp_configXXXXX",SUFFIX => ".js",DIR => $tmpfile);
+      
         # Log file name.
-        my $logfile = "logs/$sets[1]-$sets[2]-$_-$warms[0]-$warms[1].log";
+        my $logfile = "logs/$sets[1]-$sets[2]-$stratn-$warms[0]-$warms[1].log";
         #$gconfig =~ s/simulationBalance: {/n    asset: 0,/n    currency: 4/$asset/;
         #$gconfig =~ s/(?<=currency: )(.*)(?=,)/$currency/;
         $gconfig = $gconfig1;
-        if ($ocsv) {
-          $csv = $ocsv
-        }
+
         if (defined $from) {
           $gconfig =~ s/daterange:  'scan',/daterange: {\n    from: \"$from\",\n    to: "$to"\n  },/g; 
         }
@@ -592,17 +1172,27 @@ else {
         $gconfig =~ s/(?<=slippage: )(.*)(?=,)/$slippage/;
         $gconfig =~ s/(?<=riskFreeReturn: )(.*)(?=,)/$riskFreeReturn/;
         
-        my $sname = $_;
-        if ($use_toml_files eq 'yes') {
-          my @file_list = find_wanted( sub { -f && /^$sname\..*$/i }, $toml_directory );
-          if (@file_list) {
-            &convert($file_list[0]);
-          }
-          $stratsettings = $json;
-        }
+
+
+       
         
-        $gconfig =~ s/}(?=\nconfig.performanceAnalyzer)/}\n$stratsettings/m;
-        my @strat = $gconfig =~ /(?<=config.$sname = \{)(.*?)(?=};)/s;
+        $gconfig =~ s/}(?=\nconfig.performanceAnalyzer)/}\n$stratconfig{$stratn}/m;
+        my @strat = $gconfig =~ /(?<=config.tutajbylazmienna = \{)(.*?)(?=};)/s;
+        my $stratcvs = 'NA';
+        if (length $stratconfig{$stratn} > 3) {
+          my $stratcvs = $stratconfig{$stratn};
+          my $toml;
+          $stratcvs =~ s/config..*= //g;
+          $stratcvs = &convert_json_toml($stratcvs);
+          $stratcvs =~ s/[\n\t]/ /g;
+          $stratcvs =~ s/  / /g;
+          $stratcvs =~ s/^\s+//;
+          $stratcvs =~ s/\s+$//;
+          $stratcvs =~ s/"//g;
+          $stratcvs =~ s/'//;
+        }
+        #$stratcvs =~ s/$/"/;
+
         $strat[0] =~ s/[\n\t]/ /g;
         $strat[0] =~ s/  / /g;
         $strat[0] =~ s/^\s+//;
@@ -610,17 +1200,20 @@ else {
         $strat[0] =~ s/"/\'/g;
         $strat[0] =~ s/^/"/;
         $strat[0] =~ s/$/"/;
+        my @tmps = split / /, $stratn;
+        
         $gconfig =~ s/(?<=config.candleWriter = \{\n  enabled: )(.*)(?=\n)/false/m;
         $gconfig =~ s/(?<=exchange: ')(.*?)(?=',)/$sets[0]/g;
         $gconfig =~ s/(?<=currency: ')(.*?)(?=',)/$sets[1]/g;
         $gconfig =~ s/(?<=asset: ')(.*?)(?=',)/$sets[2]/g;
-        $gconfig =~ s/(?<=method: ')(.*?)(?=',)/$_/g;
+        $gconfig =~ s/(?<=method: ')(.*?)(?=',)/$tmps[0]/g;
         $gconfig =~ s/(?<=candleSize: )(.*?)(?=,)/$warms[0]/g;
         $gconfig =~ s/(?<=historySize: )(.*?)(?=,)/$warms[1]/g;
         
         open my $fh, '>', $configfile or die "Cannot open $configfile!";
         print $fh join ("\n",$gconfig);
         close $fh;
+  #  sleep 100;
         my $grun = `node gekko -b -c $configfile`;
         my @market = $grun =~ /(?<=Market:\t\t\t\t )(.*?)(?=%)/;
         if ($keep_logs eq 'yes') {
@@ -637,7 +1230,7 @@ else {
         my @end = $grun =~ /end time:\s+\K(.*)/;
 
 
-        my @roundtrips = $grun =~ /ROUNDTRIP\)\s+\d{4}-\d{2}-\d{2}.*?\K-?\d+\.\d+/g;
+        my @roundtrips = $grun =~ /ROUNDTRIP\)\s+\d{4}-\d{2}-\d{2}.*?-?\d+\.\d+\s+\K-?\d+.\d+/g;
         my ($worst_loss, $best_win) = minmax @roundtrips;
         my @wins = grep($_ > 0, @roundtrips);
         $percentage_wins = -1;
@@ -754,70 +1347,12 @@ else {
               $var = sprintf("%.8f", $var);
             }
             $paircalc{"avg$pairname"} = $var;
-
-   
-
-
           }
-
-          if ( ! -e $csv) {
-            sub columns {
-              my $vars = {
-                'currency' => 'currency',
-                'asset' => 'asset',
-                'exchange' => 'exchange',
-                'strategy' => 'strategy',
-                'profit' => 'profit[%]',
-                'profit_day' => 'profit/day[%]',
-                'profit_year' => 'profit/year[%]',
-                'sharpe_ratio' => '"sharpe ratio"',
-                'market_change' => '"market change[%]"',
-                'profit_market' => '"profit-market"',
-                'trades' => 'trades',
-                'trades_day' => 'trades/day',
-                'winning_trades' => '"winning trades"',
-                'lost_trades' => '"lost trades"',
-                'percentage_wins' => 'wins[%]',
-                'best_win' => '"best win"',
-                'median_wins' => '"median wins"',
-                'worst_loss' => '"worst loss"',
-                'median_losses' => '"median losses"',
-                'avg_exposed_duration' => '"avg HODL[min]"',
-                'candle_size' => 'candleSize',
-                'warmup_period' => 'historySize',
-                'dataset_days' => 'days',
-                'backtest_start' => 'start',
-                'dataset_from' => 'from',
-                'dataset_to' => 'to',
-                'CMC_Rank' => '"cur CMC rank"',
-                'current_marketcap' => '"cur marketcap"',
-                'open_price' => '"open price"',
-                'close_price' => 'close',
-                'lowest_price' => 'low',
-                'highest_price' => 'high',
-                'avg_price' => '"avg. price"',
-                'price_volality' => '"volatility"',
-                'volume' => 'volume',
-                'volume_day' => 'volume/day',
-                'volume_CMC' => '"cur CMC volume"',
-                'overall_trades' => '"overall trades"',
-                'overall_trades_day' => '"overall tradaes/day"',
-              };
-              my $out;
-              $tocsv = Template->new({ });
-              $tocsv->process($_[0], $vars, \$out);
-              open my $fh3, '>>', $csv or die "Cannot open $csv!";
-              print $fh3 join ("\n","$out \r\n");
-              close $fh3;
-            }
-            &columns($csv_columns);
-          }
-
           my $vars = {
             'currency' => $sets[1],
             'asset' => $sets[2],
             'exchange' => $sets[0],
-            'strategy' => $_,
+            'strategy' => $stratn,
             'profit' => $profit,
             'profit_day' => $profit_day,
             'profit_year' => $profit_year,
@@ -853,70 +1388,68 @@ else {
             'volume_CMC' => $paircalc{"cmcvol$pairname"},
             'overall_trades' => $paircalc{"tra$pairname"},
             'overall_trades_day' => $paircalc{"trad$pairname"},
+            'strategy_settings' => $stratcvs,
+            'note' => $note
           };
 
           my $csvout;
           $tocsv = Template->new({ });
           $tocsv->process($csv_columns, $vars, \$csvout);
-
           open my $fh3, '>>', $csv or die "Cannot open $csv!";
-          print $fh3 join ("\n", "$csvout \r\n");
+          print $fh3 join ("\n", "$csvout\r\n");
           close $fh3;
           
-          sub tempr {
-
-          $csv_columns = \ "[% currency %],[% asset %],[% strategy %],[% profit %],[% profit_day %],[% profit_market %],[% trades_day %],[% percentage_wins %],[% best_win %],[% worst_loss %],[% avg_exposed_duration %],[% avg_price %],[% price_volality %],[% volume_day %],[% overall_trades_day %]";
-          $tocsv = Template->new({ });
-          $tocsv->process($csv_columns, $vars, \$csvout);
-
+          $tocsvtmp = Template->new({ });
+          $tocsvtmp->process($csv_columns_tmp, $vars, \$csvouttmp);
           open my $fh, '>>', $tmpcsv or die "Cannot open $tmpcsv!";
-          print $fh join ("\n", "$csvout \r\n");
+          print $fh $csvouttmp;
           close $fh;
-  
-          }
-          &tempr();
-                    if ($print_roundtrips eq 'yes') {
+        
+            if ($print_roundtrips eq 'yes') {
             print "---------\n";
             my @trips;
             @trips = $grun =~ /(?<=ROUNDTRIP\) )[0-9a-z].*/g;
             foreach (@trips) {
             print "$_\n";
             }
-          }          
-
-          print "$sets[1]-$sets[2]  $_\tprofit:\t$profit%\tprofit-market: $profit_market%\tprofit/d: $profit_day%\ttrades/d: $trades_day\t candle:$warms[0]:$warms[1]\tdays: $dataset_days\tbacktest time: ";
+          }    
+ 
+          
           my $endthread = time;
-          my $elapsedthread = $endthread - $startthread;
-          $elapsedthread = elapsed( $elapsedthread );
-          print "$elapsedthread\n";
+
+  
+          printf $outformat, "$sets[1]:$sets[2]",$stratn,"$profit%",$profit_market,$trades_day,"$percentage_wins%","$best_win%","$worst_loss%",$avg_exposed_duration, "$warms[0]:$warms[1]",$dataset_days,strftime("\%M:\%S", gmtime($endthread - $startthread));
+          print "\n";
+          
+          #\tprofit-market: $profit_market%\tprofit/d: $profit_day%\ttrades/d: $trades_day\t candle:$warms[0]:$warms[1]\tdays: $dataset_days\tbacktest time: ";
+
+       
+          #print "$elapsedthread\n";
         }
         else {
           my @error = $grun =~ /(?<=Error:\n\n).*/g;
           print "$sets[1]-$sets[2] Backtest is failed. @error\n";
         }
 
-        if (@strategies >= @pairs && @strategies >= @warmup && @strategies > 1) {
+        if (scalar (keys %stratconfig) >= @pairs && scalar (keys %stratconfig) >= @warmup && scalar (keys %stratconfig) > 1) {
           $pm->finish(0, \%paircalc);
         }
       }
-      if (@pairs >= @strategies && @pairs >= @warmup && @pairs > 1) {
+      if (@pairs >= scalar (keys %stratconfig) && @pairs >= @warmup && @pairs > 1) {
         $pm->finish(0, \%paircalc);
       }
     }
-    if (@warmup >= @strategies && @warmup >= @pairs && @warmup > 1) {
+    if (@warmup >= scalar (keys %stratconfig) && @warmup >= @pairs && @warmup > 1) {
       $pm->finish(0, \%paircalc);
     }
  
   $pm->wait_all_children;
   }
-
-  #&analyze($tmpcsv);
-
+  print "\n";
+  &analyze($tmpcsv);
   my $endapp = time;
   my $elapsedapp = $endapp - $startapp;
   $elapsedapp = elapsed( $elapsedapp );
-  print "All jobs are done. Elapsed time: $elapsedapp\n";
+  print "[".strftime ("%Y-%m-%d %H:%M:%S", localtime)."] All jobs are done. Elapsed time: $elapsedapp\n";
   
 }
-unlink glob "$tmpfile/*";
-rmdir $tmpfile
