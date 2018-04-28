@@ -1179,8 +1179,9 @@ Total: ".scalar @warmup."
         $gconfig =~ s/}(?=\nconfig.performanceAnalyzer)/}\n$stratconfig{$stratn}/m;
         my @strat = $gconfig =~ /(?<=config.tutajbylazmienna = \{)(.*?)(?=};)/s;
         my $stratcvs = 'NA';
+
         if (length $stratconfig{$stratn} > 3) {
-          my $stratcvs = $stratconfig{$stratn};
+          $stratcvs = $stratconfig{$stratn};
           my $toml;
           $stratcvs =~ s/config..*= //g;
           $stratcvs = &convert_json_toml($stratcvs);
@@ -1192,7 +1193,6 @@ Total: ".scalar @warmup."
           $stratcvs =~ s/'//;
         }
         #$stratcvs =~ s/$/"/;
-
         $strat[0] =~ s/[\n\t]/ /g;
         $strat[0] =~ s/  / /g;
         $strat[0] =~ s/^\s+//;
