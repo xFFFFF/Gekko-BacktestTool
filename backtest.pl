@@ -444,7 +444,7 @@ if ($oimport) {
           local $/;
           <$json_fh>
         };
-        my $json = JSON->new;
+        my $json = JSON::XS->new;
         my $data = $json->decode($json_text);
     
         my $rec = scalar (@{ $data->{markets} }) -1;
