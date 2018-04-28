@@ -29,13 +29,10 @@ Database file
 - [Binaries of BacktestTool](https://github.com/xFFFFF/Gekko-BacktestTool/releases)
 
 # Installation
-**"Binaries": Easiest install way for Linuxes**
+**"Binaries": Easiest install way**
 1. Download latest version from repository's [releases](https://github.com/xFFFFF/Gekko-BacktestTool/releases):  
-`$ wget https://github.com/xFFFFF/Gekko-BacktestTool/releases/download/v0.5/Gekko-BacktestTool-v0.5-Ubuntu-x64.zip`
-2. Extract zip:   
-`$ unzip Gekko-BacktestTool-v0.5-Ubuntu-x64.zip`
+2. Extract downloaded zip.   
 3. Copy all extrated files to main Gekko's directory:    
-`$ cp backtest backtest-config.pl /home/f/gekko`
 
 **Open Source: Debian, Ubuntu, Linux Mint**
 1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
