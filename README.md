@@ -1,4 +1,6 @@
-# Gekko BacktestTool
+# Gekko BacktestTool 
+![badge](https://img.shields.io/github/release/xFFFFF/Gekko-BacktestTool.svg) ![GitHub Release Date](https://img.shields.io/github/release-date/xFFFFF/Gekko-BacktestTool.svg) ![badge](https://img.shields.io/github/downloads/xFFFFF/Gekko-BacktestTool/total.svg) ![GitHub last commit](https://img.shields.io/github/last-commit/xFFFFF/Gekko-BacktestTool.svg) ![badge](https://img.shields.io/github/license/mashape/apistatus.svg) ![badge](https://img.shields.io/github/languages/code-size/xFFFFF/Gekko-BacktestTool.svg)  ![GitHub closed issues](https://img.shields.io/github/issues-closed/xFFFFF/Gekko-BacktestTool.svg)   
+
 CLI tool that enhances the features of [Gekko's Trading Bot](https://github.com/askmike/gekko). The tool performs a test with multiple pairs on a single run. Suppose you have a strategy that you want to test on more currency pairs. You enter all the pairs on which you want to test the strategy for the BacktestTool's configuration file. You start the application and everything happens automatically. You are just waiting for the results that appear on the screen. You will see how your strategy falls on other pairs, where it works the best, and where the worst. More detailed data is available in the .CSV file, which you can open in a spreadsheet or text editor.
 
 ![Top Dataset](http://i.imgur.com/U7TCuSn.png)   
@@ -30,9 +32,9 @@ Database file
 
 # Installation
 **"Binaries": Easiest install way**
-1. Download latest version from repository's [releases](https://github.com/xFFFFF/Gekko-BacktestTool/releases):  
+1. Download latest version from repository's [releases](https://github.com/xFFFFF/Gekko-BacktestTool/releases).  
 2. Extract downloaded zip.   
-3. Copy all extrated files to main Gekko's directory:    
+3. Copy all extrated files to main Gekko's directory.   
 
 **Open Source: Debian, Ubuntu, Linux Mint**
 1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
