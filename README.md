@@ -1,6 +1,8 @@
 # Gekko BacktestTool
 CLI tool that enhances the features of [Gekko's Trading Bot](https://github.com/askmike/gekko). The tool performs a test with multiple pairs on a single run. Suppose you have a strategy that you want to test on more currency pairs. You enter all the pairs on which you want to test the strategy for the BacktestTool's configuration file. You start the application and everything happens automatically. You are just waiting for the results that appear on the screen. You will see how your strategy falls on other pairs, where it works the best, and where the worst. More detailed data is available in the .CSV file, which you can open in a spreadsheet or text editor.
 
+![Top Dataset](http://i.imgur.com/U7TCuSn.png)   
+
 You can do the same with many strategies and CandleSize values. You can test all your strategies on eg BTC-USD pair and compare results, which will allow you to choose the best strategy you will use in live trade.
 
 # DEMO
@@ -18,7 +20,9 @@ Database file
 - **Strategy config file** - support both TOML and JSON files in CLI mode
 - **Strategy optimization** - searching for optimal parameters (brute force method) for the strategy on many datasets
 - **Multithreading** - in contrast to raw Gekko backtest this tool can uses 100% of your processor
-- **Extended statistics** - 40 variables from single backtest result, such as: *volume*, *price (min, max, avg, volality)*, *percent of win trades*, *median P&L for trades*, *marketcap*, *CoinMarketCap Rank*, etc.
+- **Extended statistics** - 40 variables from single backtest result, such as: *volume*, *price (min, max, avg, volality)*, *percent of win trades*, *median P&L for trades*, *marketcap*, *CoinMarketCap Rank*, etc.   
+
+![Top Strats](http://i.imgur.com/JXjKVDT.png)   
 
 # Minimal requirements
 - [Gekko Trading Bot](https://github.com/askmike/gekko)
@@ -91,6 +95,7 @@ Optional parameters:
   -t now		- 'now' is current time in GMT.
   -o, --output FILENAME - CSV file name.
 ```
+![Run](http://i.imgur.com/OY14rKb.png)     
 
 # Some examples
 - **B**acktests of all available pairs for Binance Exchange in Gekko's scan datarange mode:   
