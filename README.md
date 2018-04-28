@@ -123,6 +123,8 @@ The above example will generate 15 backtests with unique configurations. Syntax 
 - Import sqlite file dumps (full history)
 - GUI   
 
+![Brute force](http://i.imgur.com/gnywgrA.png)   
+
 # Change Log
 v0.6
 - after completion of the backtests, the analysis module displays three tables with data: *ALL RESULTS*, *TOP STRATEGIES*, *TOP DATASET*
