@@ -1,4 +1,7 @@
 # Gekko BacktestTool 
+![Logo](https://i.imgur.com/7rSHT2u.png)   
+[![Donate with Bitcoin](https://en.cryptobadges.io/badge/small/32G2cYTNFJ8heKUbALWSgGvYQikyJ9dHZp)](https://en.cryptobadges.io/donate/32G2cYTNFJ8heKUbALWSgGvYQikyJ9dHZp)   
+[![Donate with Ethereum](https://en.cryptobadges.io/badge/small/0x50b7611b6dC8a4073cB4eF12A6b045f644c3a3Aa)](https://en.cryptobadges.io/donate/0x50b7611b6dC8a4073cB4eF12A6b045f644c3a3Aa)   
 ![badge](https://img.shields.io/github/release/xFFFFF/Gekko-BacktestTool.svg) ![GitHub Release Date](https://img.shields.io/github/release-date/xFFFFF/Gekko-BacktestTool.svg) ![badge](https://img.shields.io/github/downloads/xFFFFF/Gekko-BacktestTool/total.svg) ![GitHub last commit](https://img.shields.io/github/last-commit/xFFFFF/Gekko-BacktestTool.svg) ![badge](https://img.shields.io/github/license/mashape/apistatus.svg) ![badge](https://img.shields.io/github/languages/code-size/xFFFFF/Gekko-BacktestTool.svg)  ![GitHub closed issues](https://img.shields.io/github/issues-closed/xFFFFF/Gekko-BacktestTool.svg)   
 
 CLI tool that enhances the features of [Gekko's Trading Bot](https://github.com/askmike/gekko). The tool performs a test with multiple pairs on a single run. Suppose you have a strategy that you want to test on more currency pairs. You enter all the pairs on which you want to test the strategy for the BacktestTool's configuration file. You start the application and everything happens automatically. You are just waiting for the results that appear on the screen. You will see how your strategy falls on other pairs, where it works the best, and where the worst. More detailed data is available in the .CSV file, which you can open in a spreadsheet or text editor.
@@ -178,10 +181,3 @@ v0.1
 # See also
 - [Gekko's Datasets](https://github.com/xFFFFF/Gekko-Datasets)   
 - [Gekko's Strategies](https://github.com/xFFFFF/Gekko-Strategies)    
-
-# Donate
-If you liked my work, you can buy me coffee.   
-BTC: `32G2cYTNFJ8heKUbALWSgGvYQikyJ9dHZp`   
-BCH: `qrnp70u37r96ddun2guwrg6gnq45yrxuwu3gyewsgq`   
-ETH: `0x50b7611b6dC8a4073cB4eF12A6b045f644c3a3Aa`   
-LTC: `M9xT3mcxskjbvowoFa15hbKXShLNTuwr6n`   
