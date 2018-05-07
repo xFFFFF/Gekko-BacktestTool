@@ -65,7 +65,7 @@ sub convert {
  # print $data;
   my $coder = JSON::XS->new->ascii->pretty->allow_nonref;
   $json = $coder->encode ($data);
-  $json =~ s/^{/config.$stratname = {\n/;
+  $json =~ s/^{/config['$stratname'] = {\n/;
   return $json;
 }
 sub convert_json_toml {
