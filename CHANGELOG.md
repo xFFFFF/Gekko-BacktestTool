@@ -1,13 +1,26 @@
-# Gekko BacktestTool 
-![Logo](https://i.imgur.com/G3Dcv7i.png)   
+# Gekko BacktestTool
+![Logo](https://i.imgur.com/G3Dcv7i.png)
 
 ## Change Log
+### v0.7
+- "progress bar", ETA, avg backtest duration, TOP tables after each X backtests results
+- limits and filters for TOP tables
+- the possibility of defining a period for individual pairs ex: binance:USDT:BTC:2018-04-01:2018-04-05
+- parameter `--period 7 days` perform action for last 7 days without typing dates
+- default exchange and/or currency in configuration file for shorter pairs typing
+- strats config are back to csv file
+- stfu mode can be enabled in configuration file
+- some layout changes
+- bugfixes: [#8](https://github.com/xFFFFF/Gekko-BacktestTool/pull/8), [#17](https://github.com/xFFFFF/Gekko-BacktestTool/pull/17)
+- backtest-config.pl updated
+- new binaries are done
+
 ### v0.6
 - after completion of the backtests, the analysis module displays three tables with data: *ALL RESULTS*, *TOP STRATEGIES*, *TOP DATASET*
 - parameter `--analyze mycsvfile.csv` for analyze any results from BacktestTool's external file
 - searching optimal strategy parameters by brute force method with syntax `start..end:step` or `value1, value2, value3` in strat's toml file
-- value `ALL` for exchanges and strategies for backtest machine - do backtests on all available exchanges, currencies, assets or strategies. Based on filenames in history and strategies directories. 
-- add binaries for Linux and FreeBSD to [releases](https://github.com/xFFFFF/Gekko-BacktestTool/releases) 
+- value `ALL` for exchanges and strategies for backtest machine - do backtests on all available exchanges, currencies, assets or strategies. Based on filenames in history and strategies directories.
+- add binaries for Linux and FreeBSD to [releases](https://github.com/xFFFFF/Gekko-BacktestTool/releases)
 - backtest-config.pl updated
 - README.MD updated
 
@@ -29,7 +42,7 @@
 - some code clean
 - some fixes
 
-### v0.3 
+### v0.3
 - Gekko BacktestTool external config file support. Default config file is backtest-config.pl, but You can create own and use `backtest.pl --config BACKTESTTOOL_CONFIG_FILENAME parameter`
 - using TOML files for strategies configuration as default. Can be changed in backtest-config.pl
 - *percentage wins, best win, worst loss, median win, median lost, average exposed* duration added to csv file.
