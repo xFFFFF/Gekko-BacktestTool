@@ -153,7 +153,7 @@ sub dbcon {
 sub analyze {
   if ($print_all_results eq 'yes') {
     print "\n\n[".strftime ("%Y-%m-%d %H:%M:%S", localtime)."] Creating ALL RESULTS table (sorted profit/day)...\n" if $stfu eq 'no';
-    $dbh = DBI->connect ("dbi:CSV:", "", "", {RaiseError => 1, PrintError => 1, csv_eol => "\r\n"});
+    $dbh = DBI->connect ("dbi:CSV:", "", "", {RaiseError => 1, PrintError => 1, csv_eol => "\n"});
     my $query = "SELECT currency, asset, strategy, profit___, profit_market, profit_day___, trades_day, best_win, worst_loss, avg_HODL_min_, avg_price, overall_trades_day, volume_day FROM $_[0]";
     my $stc   = $dbh->prepare ($query);
     $stc->execute();
@@ -740,7 +740,7 @@ To run other features
 
 Mode:
   -i, --import\t - Import datasets
-  -icc, --importcc - Import datasets from CryptoCompare API - Bittrex, Zaif, OKcoin and others
+  -icc, --importcc - Import datasets from CryptoCompare API - Bittrex, Zaif, OKcoin and others.
   -g, --paper\t - Start multiple sessions of PaperTrader
   -v, --convert TOMLFILE - Convert TOML file to Gekko's CLI config format, ex: backtest.pl -v MACD.toml
   -a, --analyze CSVFILE\t - Perform comparision of strategies and pairs from csv file, ex: backtest.pl -a database.csv
@@ -839,7 +839,7 @@ else {
       $tocsv = Template->new({ });
       $tocsv->process($_[0], $vars, \$out);
       open my $fh3, '>>:encoding(UTF-8)', $csv or die "Cannot open $csv!";
-      print $fh3 join ("\r\n","$out\r\n");
+      print $fh3 join ("\n","$out\n");
       close $fh3;
     }
     &columns($csv_columns);
@@ -850,7 +850,7 @@ else {
   $tocsvtmp = Template->new({ });
   $tocsvtmp->process($csv_columns_tmp, $vars, \$outtmp);
   open my $fh11, '>:encoding(UTF-8)', $tmpcsv or die "Cannot open $tmpcsv!";
-  print $fh11 join ("\r\n","$outtmp\r\n");
+  print $fh11 join ("\n","$outtmp\n");
   close $fh11;
 
   if ($cmc_data eq 'yes') {
@@ -1318,8 +1318,7 @@ Total: ".scalar (@strategies)."\n";
 if (scalar (keys %stratconfig) > scalar (@strategies)) {
 print " (".scalar (keys %stratconfig)." different settings)";
 }
-print "
-===================================================================================================================================================
+print "===================================================================================================================================================
 Candles
 -------
 $walist
@@ -1646,13 +1645,13 @@ Total: ".scalar @warmup."
             $tocsv = Template->new({ });
             $tocsv->process($csv_columns, $vars, \$csvout);
             open my $fh4, '>>:encoding(UTF-8)', $csv or die "Cannot open $csv!";
-            print $fh4 join ("\r\n", "$csvout\r\n");
+            print $fh4 join ("\n", "$csvout\n");
             close $fh4;
 
             $tocsvtmp = Template->new({ });
             $tocsvtmp->process($csv_columns_tmp, $vars, \$csvouttmp);
             open my $fh5, '>>:encoding(UTF-8)', $tmpcsv or die "Cannot open $tmpcsv!";
-            print $fh5 join ("\r\n", "$csvouttmp\r\n");
+            print $fh5 join ("\n", "$csvouttmp\n");
             close $fh5;
           # }
           if ($print_roundtrips eq 'yes') {
