@@ -739,7 +739,8 @@ usage: perl backtest.pl [mode] [optional parameter]
 To run other features
 
 Mode:
-  -i, --import\t - Import new datasets
+  -i, --import\t - Import datasets
+  -icc, --importcc - Import datasets from CryptoCompare API - Bittrex, Zaif, OKcoin and others
   -g, --paper\t - Start multiple sessions of PaperTrader
   -v, --convert TOMLFILE - Convert TOML file to Gekko's CLI config format, ex: backtest.pl -v MACD.toml
   -a, --analyze CSVFILE\t - Perform comparision of strategies and pairs from csv file, ex: backtest.pl -a database.csv
@@ -751,13 +752,13 @@ Optional parameters:
   -p exchange:ALL\t - Perform action on all available pairs. Other usage: exchange:USD:ALL to perform action for all USD pairs.
   -n, --candle CANDLE\t - Define candleSize and warmup period for backtest in candleSize:warmup format, ex: backtest.pl -n 5:144,10:73. You can add multiple values seperated by commas.
   -ft, --period DAYS - Time range in days - perform action on period from last x days ex: backtest.pl -ft 7
-  -f, --from\t\t- Time range for backtest datasets or import. Example: backtest.pl --from="2018-01-01 09:10" --to="2018-01-05 12:23"
+  -f, --from\t\t- Alternative solution for -ft. Time range for backtest datasets or import. Example: backtest.pl --from="2018-01-01 09:10" --to="2018-01-05 12:23"
   -t, --to
   -f last\t\t- Start import from last candle available in DB. If pair not exist in DB then start from 24h ago.
   -t now\t\t- 'now' is current time in GMT.
   -o, --output FILENAME - CSV file name.
 };
-
+exit
 }
 if ($oconvert) {
 
