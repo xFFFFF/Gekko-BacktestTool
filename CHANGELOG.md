@@ -2,6 +2,9 @@
 ![Logo](https://i.imgur.com/G3Dcv7i.png)
 
 ## Change Log
+### Develop version
+- import via CryptoCompare API (support Bittrex, Zaif and others)
+
 ### v0.7
 - "progress bar", ETA, avg backtest duration, TOP tables after each X backtests results
 - limits and filters for TOP tables
