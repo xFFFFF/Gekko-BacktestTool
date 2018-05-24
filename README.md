@@ -50,7 +50,7 @@ You can do the same with many strategies and CandleSize values. You can test all
 `$ su`   
 `$ cpan install Parallel::ForkManager Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https Set::CrossProduct DBD::CSV Text::Table File::Copy`   
    
-### MS Windows   
+### Open Source: MS Windows   
 1. Install [Strawberry Perl](http://strawberryperl.com/)
 2. Download Gekko BacktestTool from [here](https://github.com/xFFFFF/Gekko-BacktestTool/archive/master.zip)
 3. Uncompress files from master.zip to Your main Gekko's folder
@@ -58,6 +58,9 @@ You can do the same with many strategies and CandleSize values. You can test all
 5. Enter cmd.exe and press enter
 6. In appeared Window with black background enter command:
 `cpan install Parallel::ForkManager Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https Set::CrossProduct DBD::CSV Text::Table File::Copy`   
+
+### Open Source: Docker container
+The installation tutorial by *bald123* can be found in the Wiki: [Docker installation](https://github.com/xFFFFF/Gekko-BacktestTool/wiki/Docker-installation).
 
 ## Run 
 1. Edit backtest-config.pl in text editor.  
