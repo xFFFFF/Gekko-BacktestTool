@@ -14,12 +14,9 @@ poloniex:BTC:ADA
 kraken:EUR:XBT
 );
 
-# Put your candle values between brackets in line below. Use CandleSize:WarmupPeriod format. Seperate pair using space or newline.
+# BUG - USE ONE CANDLE VALUE TEMPORARY! Put your candle values between brackets in line below. Use CandleSize:WarmupPeriod format. Seperate pair using space or newline.
 @warmup = qw(
 10:73
-11:70
-12:69
-13:65
 );
 
 ############################# OPTIONAL SETTINGS #############################
