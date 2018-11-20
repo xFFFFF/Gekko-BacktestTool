@@ -741,6 +741,7 @@ else {
   if ($cmc_data eq 'yes') {
     print "[".strftime ("%Y-%m-%d %H:%M:%S", localtime)."] Collect data from coinmarketcap.com\n" if $stfu eq 'no';
     $req = LWP::UserAgent->new;
+    $req->env_proxy;
     $req->agent("Gekko BacktestTool");
     $req->timeout(10);
     my $response = $req->get("https://api.coinmarketcap.com/v1/ticker/?limit=800");
