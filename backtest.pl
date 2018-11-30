@@ -1277,7 +1277,7 @@ Total: ".scalar @warmup."
           print $fh2 join ("\n",$grun);
           close $fh2;
         }
-        my @profit = $grun =~ /(?<=simulated profit:\t\t )[0-9.\-][0-9.\-]* $sets[1] \((.*)(?=\%\))/;
+        my @profit = $grun =~ /(?<=profit:\t\t\t\t )[0-9.\-][0-9.\-]* $sets[1] \((.*)(?=\%\))/;
         my @yearly = $grun =~ /(?<=simulated yearly profit:\t )[0-9.\-][0-9.\-]* $sets[1] \((.*)(?=\%\))/;
         my @trades = $grun =~ /(?<=trades:\t\t )(.*?)(?=\n)/;
         my @period = $grun =~ /(?<=timespan:\t\t\t )(.*?)(?=\n)/;
