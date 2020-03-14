@@ -456,7 +456,7 @@ if ($oimport) {
     }
     @match = uniq @match;
     {
-    local $CWD = 'util/genMarketFiles';
+    local $CWD = 'exchange/util/genMarketFiles';
     foreach (@match) {
     print "Updating Gekko's $_ market data...\n";
     system("node update-$_.js");
@@ -466,7 +466,7 @@ if ($oimport) {
       my @sets = split /:/, $_;
       #SPRAWDZIC!!!!!!!!!!!!!!
       if ($sets[1] eq 'ALL' || $sets[2] eq 'ALL') {
-        my $filename = "exchanges/$sets[0]-markets.json";
+        my $filename = "exchange/wrappers/$sets[0]-markets.json";
         my $json_text = do {
           open(my $json_fh, "<:encoding(UTF-8)", $filename) or die("Can't open \$filename\": $!\n");
           local $/;
