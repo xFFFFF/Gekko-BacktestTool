@@ -37,20 +37,28 @@ You can do the same with many strategies and CandleSize values. You can test all
 2. Extract downloaded zip.   
 3. Copy all extrated files to main Gekko's directory.   
 
-### Open Source: Debian, Ubuntu, Linux Mint
+### Source code: Debian, Ubuntu, Linux Mint
 1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
 2. Copy files to Gekko's main directory
 3. Install dependies:   
 `$ sudo cpan install Parallel::ForkManager Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https Set::CrossProduct DBD::CSV Text::Table File::Copy`   
 
-### Open Source: Other Unix-like OS
+### Source code: Other Unix-like OS
 1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
 2. Copy files to Gekko's main directory
 3. Install dependies:   
 `$ su`   
-`$ cpan install Parallel::ForkManager Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https Set::CrossProduct DBD::CSV Text::Table File::Copy`   
+`$ cpan install Parallel::ForkManager Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https Set::CrossProduct DBD::CSV Text::Table File::Copy`
+
+### Source code: CentOS 7
+1. Clone git https://github.com/xFFFFF/Gekko-BacktestTool
+2. Copy files to Gekko's main directory
+3. Install dependies for CentOS:   
+`$ sudo yum install -y perl-Parallel-ForkManager perl-DBD-CSV perl-Text-Table perl-Module-Build-Tiny perl-libwww-perl perl-LWP-Protocol-https perl-Crypt-SSLeay`
+4. Install dependies for perl:   
+`$ sudo cpan install Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template Set::CrossProduct Text::Table File::Copy`   
    
-### Open Source: MS Windows   
+### Source code: MS Windows   
 1. Install [Strawberry Perl](http://strawberryperl.com/)
 2. Download Gekko BacktestTool from [here](https://github.com/xFFFFF/Gekko-BacktestTool/archive/master.zip)
 3. Uncompress files from master.zip to Your main Gekko's folder
@@ -59,7 +67,7 @@ You can do the same with many strategies and CandleSize values. You can test all
 6. In appeared Window with black background enter command:
 `cpan install Parallel::ForkManager Time::Elapsed Getopt::Long List::MoreUtils File::chdir Statistics::Basic DBI  DBD::SQLite JSON::XS TOML File::Basename File::Find::Wanted Template LWP::UserAgent LWP::Protocol::https Set::CrossProduct DBD::CSV Text::Table File::Copy`   
 
-### Open Source: Docker container
+### Source code: Docker container
 The installation tutorial by *bald123* can be found in the Wiki: [Docker installation](https://github.com/xFFFFF/Gekko-BacktestTool/wiki/Docker-installation).
 
 ## Run 
