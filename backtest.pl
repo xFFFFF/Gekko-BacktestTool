@@ -870,7 +870,7 @@ else {
   # Strat conf manipulation
   if ($use_toml_files eq 'yes') {
     foreach $strat (@strategies) {
-      my @file_list = <config/strategies/$strat.*>;
+      my @file_list = <$toml_directory/$strat.*>;
       my $substitute;
       if (@file_list) {
         open(my $fh, '<:encoding(UTF-8)', $file_list[0]) or die "cannot open file $_[0]";

@@ -91,7 +91,7 @@ $print_roundtrips = 'no';
 
 # Use TOML strat's config files instead JSON?
 $use_toml_files = 'yes';
-$toml_directory = 'config/strategies/';
+$toml_directory = 'config/strategies';
 
 # Do you need Gekko's log files in log directory?
 $keep_logs = 'no';
